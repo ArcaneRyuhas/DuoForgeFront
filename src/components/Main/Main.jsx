@@ -23,10 +23,8 @@ const Main = () => {
     const [buttonHTMLIsActive, buttonHTMLsetActive] = useState(false);
     const [buttonCSSIsActive, buttonCSSsetActive] = useState(false);
 
-    // All your existing button toggles…
     const [inputValue, setInputValue] = useState('');
 
-    // New: chat history
     const [messages, setMessages] = useState([]);
 
     const handleSend = text => {
@@ -35,19 +33,22 @@ const Main = () => {
             sender: 'user',
             text
         }]);
-        setInputValue('');                // clear the box
+        setInputValue('');                
     };
 
-    // NEW USE EFFECT FOR SCROLLING 
     const mainContainerRef = useRef(null);
+    const prevMessagesLength = useRef(0);
 
     useEffect(() => {
-        if (mainContainerRef.current) {
-            mainContainerRef.current.scrollTo({
-                top: mainContainerRef.current.scrollHeight,
-                behavior: 'smooth'
-            });
+        if (messages.length > prevMessagesLength.current) {
+            if (mainContainerRef.current) {
+                mainContainerRef.current.scrollTo({
+                    top: mainContainerRef.current.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
         }
+        prevMessagesLength.current = messages.length;
     }, [messages]);
 
 
@@ -102,15 +103,15 @@ const Main = () => {
                 </div>
             </div>
             <div className="main-bottom">
-                    <SearchBox
-                        value={inputValue}
-                        onChange={e => setInputValue(e.target.value)}
-                        onSend={handleSend}
-                    />
-                    <p className="bottom-info">
-                        specify the outputs you require below!
-                    </p>
-                </div>
+                <SearchBox
+                    value={inputValue}
+                    onChange={e => setInputValue(e.target.value)}
+                    onSend={handleSend}
+                />
+                <p className="bottom-info">
+                    specify the outputs you require below!
+                </p>
+            </div>
         </div>
     );
 };
