@@ -121,28 +121,3 @@
     opacity: 1;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
-
-.chat-container {
-    flex: 1;
-    padding: 1rem;
-    overflow-y: auto;
-}
-
-.chat-bubble {
-    max-width: 70%;
-    margin-bottom: 0.5rem;
-    padding: 0.6rem 1rem;
-    border-radius: 1rem;
-}
-
-.chat-bubble.user {
-    background: #007bff;
-    color: white;
-    align-self: flex-start;
-}
-
-.chat-bubble.bot {
-    background: #f1f0f0;
-    color: #333;
-    align-self: flex-end;
-}

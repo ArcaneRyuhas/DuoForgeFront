@@ -3,6 +3,7 @@ import './Main.css';
 import { assets } from '../../assets/assets';
 import SearchBox from '../SearchBox/SearchBox';
 import Nav from '../Nav/Nav';
+import ChatContainer from '../ChatContainer/ChatContainer';
 
 const Main = () => {
 
@@ -28,12 +29,13 @@ const Main = () => {
     const [messages, setMessages] = useState([]);
 
     const handleSend = text => {
-        if (!text.trim()) return;         // ignore empty
-        setMessages(ms => [...ms, {      // append a new bubble
-            sender: 'user',
-            text
-        }]);
-        setInputValue('');                
+        if (!text.trim()) return; // ignore empty
+        setMessages(ms => [...ms, { sender: 'user', text }]);
+        setInputValue('');
+
+        setTimeout(() => {
+            setMessages(ms => [...ms, { sender: 'bot', text: "I'm the bot, responding after 5 seconds!" }]);
+        }, 1000);
     };
 
     const mainContainerRef = useRef(null);
@@ -94,13 +96,7 @@ const Main = () => {
                         <img src={assets.code_icon} />
                     </div>
                 </div>
-                <div className="chat-container">
-                    {messages.map((m, i) => (
-                        <div key={i} className={`chat-bubble ${m.sender}`}>
-                            {m.text}
-                        </div>
-                    ))}
-                </div>
+                <ChatContainer messages={messages} />
             </div>
             <div className="main-bottom">
                 <SearchBox
