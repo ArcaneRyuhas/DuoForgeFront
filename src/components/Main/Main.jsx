@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './Main.css';
 import { assets } from '../../assets/assets';
 import SearchBox from '../SearchBox/SearchBox';
@@ -38,11 +38,23 @@ const Main = () => {
         setInputValue('');                // clear the box
     };
 
+    // NEW USE EFFECT FOR SCROLLING 
+    const mainContainerRef = useRef(null);
+
+    useEffect(() => {
+        if (mainContainerRef.current) {
+            mainContainerRef.current.scrollTo({
+                top: mainContainerRef.current.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    }, [messages]);
+
 
     return (
         <div className="main">
             <Nav />
-            <div className="main-container">
+            <div className="main-container" ref={mainContainerRef}>
                 <div className="greet">
                     <p>
                         <span>Hello!</span>
@@ -88,7 +100,8 @@ const Main = () => {
                         </div>
                     ))}
                 </div>
-                <div className="main-bottom">
+            </div>
+            <div className="main-bottom">
                     <SearchBox
                         value={inputValue}
                         onChange={e => setInputValue(e.target.value)}
@@ -98,7 +111,6 @@ const Main = () => {
                         specify the outputs you require below!
                     </p>
                 </div>
-            </div>
         </div>
     );
 };

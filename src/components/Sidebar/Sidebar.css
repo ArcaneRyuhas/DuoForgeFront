@@ -1,5 +1,6 @@
 .sidebar{
     min-height: 100vh;
+    max-height: 100vh;
     display: inline-flex;
     flex-direction: column;
     justify-content: space-between;

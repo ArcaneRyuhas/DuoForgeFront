@@ -1,7 +1,7 @@
 .main {
     flex: 1;
     min-height: 100vh;
-    padding-bottom: 15vh;
+    max-height: 100vh;
     position: relative;
     background-color: #f0f0f0;
     /* Dark grayish blue (body background) */
@@ -24,8 +24,10 @@
 }
 
 .main-container {
-    max-width: 900px;
+    max-height: 70vh;
+    max-width: 80vw;
     margin: auto;
+    overflow: scroll;
 }
 
 .main .greet {
@@ -93,46 +95,13 @@
 
 .main-bottom {
     position: absolute;
+    left: 50%;
     bottom: 0;
+    transform: translateX(-50%);
     width: 100%;
-    max-width: 900px;
-    padding: 0px 20px;
-    margin: auto;
-}
-
-.search-box {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    background-color: #f0f0f0;
-    /* Slightly lighter dark blue (search box background) */
-    padding: 10px 20px;
-    border-radius: 50px;
-}
-
-.search-box img {
-    width: 24px;
-    cursor: pointer;
-    filter: brightness(1.5);
-    /* Lighten the search icon */
-}
-
-.search-box input {
-    flex: 1;
-    background-color: transparent;
-    border: none;
-    outline: none;
-    padding: 8px;
-    font-size: 18px;
-    color: #5d5e5f;
-    /* Light grayish white (input text) */
-}
-
-.search-box div {
-    display: flex;
-    align-items: center;
-    gap: 15px;
+    max-width: 80vw;
+    padding: 5px 20px;
+    margin: 0 auto;
 }
 
 .main .bottom-info {
@@ -189,12 +158,12 @@
 .chat-bubble.user {
     background: #007bff;
     color: white;
-    align-self: flex-end;
+    align-self: flex-start;
 }
 
 /* if you later want bot replies: */
 .chat-bubble.bot {
     background: #f1f0f0;
     color: #333;
-    align-self: flex-start;
+    align-self: flex-end;
 }
