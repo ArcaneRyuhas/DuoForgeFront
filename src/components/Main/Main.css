@@ -3,7 +3,8 @@
     min-height: 100vh;
     padding-bottom: 15vh;
     position: relative;
-    background-color: #f0f0f0; /* Dark grayish blue (body background) */
+    background-color: #f0f0f0;
+    /* Dark grayish blue (body background) */
 }
 
 .main .nav {
@@ -12,7 +13,8 @@
     justify-content: space-between;
     font-size: 22px;
     padding: 20px;
-    color: #d2dae2; /* Light grayish white (primary text) */
+    color: #d2dae2;
+    /* Light grayish white (primary text) */
 }
 
 .main .nav img {
@@ -29,13 +31,15 @@
 .main .greet {
     margin: 50px 0px;
     font-size: 56px;
-    color: #54a0ff; /* Vibrant blue for greeting */
+    color: #54a0ff;
+    /* Vibrant blue for greeting */
     font-weight: 500;
     padding: 20px;
 }
 
 .main .greet span {
-    background: -webkit-linear-gradient(16deg, #a29bfe, #48dbfb); /* Purple to cyan gradient */
+    background: -webkit-linear-gradient(16deg, #a29bfe, #48dbfb);
+    /* Purple to cyan gradient */
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -52,17 +56,20 @@
 .main .card {
     height: 200px;
     padding: 15px;
-    background-color: #f0f0f0; /* Slightly lighter dark blue (container background) */
+    background-color: #f0f0f0;
+    /* Slightly lighter dark blue (container background) */
     border-radius: 10px;
     position: relative;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* Subtle shadow for depth */
 }
 
 .card p {
     text-align: center;
     margin-bottom: 20px;
-    color: #484f58; /* Slightly lighter gray (paragraph text in cards) */
+    color: #484f58;
+    /* Slightly lighter gray (paragraph text in cards) */
     font-size: 17px;
 }
 
@@ -70,15 +77,18 @@
     width: 35px;
     padding: 5px;
     position: absolute;
-    background-color: #48dbfb; /* Cyan for image background */
+    background-color: #48dbfb;
+    /* Cyan for image background */
     border-radius: 20px;
     bottom: 10px;
     right: 10px;
 }
 
 .main .card:hover {
-    background-color: #bbd2f5; /* Darker blue-gray on hover */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Slightly stronger shadow on hover */
+    background-color: #bbd2f5;
+    /* Darker blue-gray on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* Slightly stronger shadow on hover */
 }
 
 .main-bottom {
@@ -95,7 +105,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    background-color: #f0f0f0; /* Slightly lighter dark blue (search box background) */
+    background-color: #f0f0f0;
+    /* Slightly lighter dark blue (search box background) */
     padding: 10px 20px;
     border-radius: 50px;
 }
@@ -103,7 +114,8 @@
 .search-box img {
     width: 24px;
     cursor: pointer;
-    filter: brightness(1.5); /* Lighten the search icon */
+    filter: brightness(1.5);
+    /* Lighten the search icon */
 }
 
 .search-box input {
@@ -113,7 +125,8 @@
     outline: none;
     padding: 8px;
     font-size: 18px;
-    color: #5d5e5f; /* Light grayish white (input text) */
+    color: #5d5e5f;
+    /* Light grayish white (input text) */
 }
 
 .search-box div {
@@ -127,27 +140,61 @@
     margin: 15px auto;
     text-align: center;
     font-weight: 300;
-    color: #ced6e0; /* Slightly lighter gray (bottom info text) */
+    color: #ced6e0;
+    /* Slightly lighter gray (bottom info text) */
 }
 
 .card button {
-    background-color: #48dbfb; /* Cyan for button background */
+    background-color: #48dbfb;
+    /* Cyan for button background */
     border: none;
     border-radius: 20px;
     padding: 5px 15px;
     margin: 2px;
-    opacity: 0.7; /* Slightly more visible initial opacity */
-    color: #1e272e; /* Dark text on the cyan button */
+    opacity: 0.7;
+    /* Slightly more visible initial opacity */
+    color: #1e272e;
+    /* Dark text on the cyan button */
     cursor: pointer;
     transition: opacity 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card button:hover {
     opacity: 1;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* Subtle shadow on hover */
 }
 
 .card .active {
     opacity: 1;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Apply hover style to active button */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* Apply hover style to active button */
+}
+
+/* Main.css */
+.chat-container {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.chat-bubble {
+    max-width: 70%;
+    margin-bottom: 0.5rem;
+    padding: 0.6rem 1rem;
+    border-radius: 1rem;
+}
+
+/* user’s own messages */
+.chat-bubble.user {
+    background: #007bff;
+    color: white;
+    align-self: flex-end;
+}
+
+/* if you later want bot replies: */
+.chat-bubble.bot {
+    background: #f1f0f0;
+    color: #333;
+    align-self: flex-start;
 }

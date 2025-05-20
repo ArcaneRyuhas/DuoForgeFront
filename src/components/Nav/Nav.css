@@ -1,0 +1,15 @@
+.nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 22px;
+    padding: 20px;
+    color: #d2dae2;
+    /* Light grayish white (primary text) */
+}
+
+.nav img {
+    width: 40px;
+    border-radius: 50%;
+    /* Keep original style if it fits your image aesthetic */
+}
