@@ -24,3 +24,41 @@
     color: #333;
     align-self: flex-start;
 }
+
+.chat-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.chat-actions button {
+    background: #48dbfb;
+    color: #1e272e;
+    border: none;
+    border-radius: 2rem;
+    padding: 0.4rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 6px rgba(72, 219, 251, 0.15);
+}
+
+.chat-actions button:hover {
+    background: #1e90ff;
+    color: #fff;
+}
+
+.chat-actions button:disabled {
+    background: #b2bec3;
+    color: #636e72;
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.7;
+}
+
+.chat-actions button.active {
+    background: #1e90ff;
+    color: #fff;
+}
