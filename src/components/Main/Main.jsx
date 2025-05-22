@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Main.css';
 import { assets } from '../../assets/assets';
+import { generateJiraStories } from '../../api/generation';
 import SearchBox from '../SearchBox/SearchBox';
 import Nav from '../Nav/Nav';
 import ChatContainer from '../ChatContainer/ChatContainer';
 
-const Main = () => {
+const Main = ({user}) => {
 
     const [buttonGraphvizIsActive, buttonGraphvizsetActive] = useState(false);
     const [buttonMermaidIsActive, buttonMermaidsetActive] = useState(false);
@@ -31,7 +32,7 @@ const Main = () => {
 
 
     const handleSend = text => {
-        if (!text.trim()) return; 
+        if (!text.trim()) return;
 
         const lastBotIndex = [...messages].reverse().findIndex(m => m.sender === 'bot');
         if (lastBotIndex !== -1) {
@@ -42,10 +43,16 @@ const Main = () => {
         setInputValue('');
         setIsWaitingResponse(true);
 
-
-        setTimeout(() => {
-            setMessages(ms => [...ms, { sender: 'bot', text: "I'm the bot, responding after 5 seconds!" }]);
-        }, 1000);
+        generateJiraStories(user?.profile?.sub, text)
+            .then(data => {
+                setMessages(ms => [...ms, { sender: 'bot', text: data.jira_stories }]); // Adjust 'data.response' as needed
+                setIsWaitingResponse(false);
+            })
+            .catch(err => {
+                setMessages(ms => [...ms, { sender: 'bot', text: "Sorry, there was an error." }]);
+                setIsWaitingResponse(false);
+                console.error(err);
+            });
     };
 
     const handleModify = (index) => {
