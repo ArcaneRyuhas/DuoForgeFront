@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { assets } from '../../assets/assets';
 import './SearchBox.css';
 
-const SearchBox = ({ value, onChange, onSend }) => {
+const SearchBox = ({ value, onChange, onSend, disabled }) => {
     const handleKeyDown = e => {
         if (e.key === 'Enter') {
             onSend(value);
@@ -22,6 +22,7 @@ const SearchBox = ({ value, onChange, onSend }) => {
                 value={value}
                 onChange={onChange}
                 onKeyDown={handleKeyDown}
+                disabled={disabled}
             />
             <div className="icon-group">
                 <img src={assets.gallery_icon} alt="gallery" />

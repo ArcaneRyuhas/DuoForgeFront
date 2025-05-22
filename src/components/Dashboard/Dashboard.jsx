@@ -2,14 +2,12 @@ import Sidebar from "../Sidebar/Sidebar";
 import Main from "../Main/Main";
 import '../../index.css';
 
-function Dashboard() {
+function Dashboard({ user }) {
   return (
-   <>
-        <Sidebar />
-        <Main />
-   </>
-
-
+    <>
+      <Sidebar />
+      <Main user={user} />
+    </>
   );
 }
 

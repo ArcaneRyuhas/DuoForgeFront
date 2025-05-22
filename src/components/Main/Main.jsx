@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './Main.css';
 import { assets } from '../../assets/assets';
+import { generateJiraStories } from '../../api/generation';
 import SearchBox from '../SearchBox/SearchBox';
 import Nav from '../Nav/Nav';
+import ChatContainer from '../ChatContainer/ChatContainer';
 
-const Main = () => {
+const Main = ({user}) => {
 
     const [buttonGraphvizIsActive, buttonGraphvizsetActive] = useState(false);
     const [buttonMermaidIsActive, buttonMermaidsetActive] = useState(false);
@@ -23,26 +25,65 @@ const Main = () => {
     const [buttonHTMLIsActive, buttonHTMLsetActive] = useState(false);
     const [buttonCSSIsActive, buttonCSSsetActive] = useState(false);
 
-    // All your existing button toggles…
+    const [disabledModifyIndexes, setDisabledModifyIndexes] = useState([]);
     const [inputValue, setInputValue] = useState('');
-
-    // New: chat history
+    const [isWaitingResponse, setIsWaitingResponse] = useState(false);
     const [messages, setMessages] = useState([]);
 
+
     const handleSend = text => {
-        if (!text.trim()) return;         // ignore empty
-        setMessages(ms => [...ms, {      // append a new bubble
-            sender: 'user',
-            text
-        }]);
-        setInputValue('');                // clear the box
+        if (!text.trim()) return;
+
+        const lastBotIndex = [...messages].reverse().findIndex(m => m.sender === 'bot');
+        if (lastBotIndex !== -1) {
+            const actualIndex = messages.length - 1 - lastBotIndex;
+            setDisabledModifyIndexes(prev => [...prev, actualIndex]);
+        }
+        setMessages(ms => [...ms, { sender: 'user', text }]);
+        setInputValue('');
+        setIsWaitingResponse(true);
+
+        generateJiraStories(user?.profile?.sub, text)
+            .then(data => {
+                setMessages(ms => [...ms, { sender: 'bot', text: data.jira_stories }]); // Adjust 'data.response' as needed
+                setIsWaitingResponse(false);
+            })
+            .catch(err => {
+                setMessages(ms => [...ms, { sender: 'bot', text: "Sorry, there was an error." }]);
+                setIsWaitingResponse(false);
+                console.error(err);
+            });
     };
+
+    const handleModify = (index) => {
+        setIsWaitingResponse(prev => !prev);
+    };
+
+    const handleContinue = (index) => {
+        setDisabledModifyIndexes(prev => [...prev, index]);
+        console.log('Continue clicked for message', index);
+    };
+
+    const mainContainerRef = useRef(null);
+    const prevMessagesLength = useRef(0);
+
+    useEffect(() => {
+        if (messages.length > prevMessagesLength.current) {
+            if (mainContainerRef.current) {
+                mainContainerRef.current.scrollTo({
+                    top: mainContainerRef.current.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
+        }
+        prevMessagesLength.current = messages.length;
+    }, [messages]);
 
 
     return (
         <div className="main">
             <Nav />
-            <div className="main-container">
+            <div className="main-container" ref={mainContainerRef}>
                 <div className="greet">
                     <p>
                         <span>Hello!</span>
@@ -81,23 +122,23 @@ const Main = () => {
                         <img src={assets.code_icon} />
                     </div>
                 </div>
-                <div className="chat-container">
-                    {messages.map((m, i) => (
-                        <div key={i} className={`chat-bubble ${m.sender}`}>
-                            {m.text}
-                        </div>
-                    ))}
-                </div>
-                <div className="main-bottom">
-                    <SearchBox
-                        value={inputValue}
-                        onChange={e => setInputValue(e.target.value)}
-                        onSend={handleSend}
-                    />
-                    <p className="bottom-info">
-                        specify the outputs you require below!
-                    </p>
-                </div>
+                <ChatContainer
+                    messages={messages}
+                    onModify={handleModify}
+                    onContinue={handleContinue}
+                    disabledModifyIndexes={disabledModifyIndexes}
+                />
+            </div>
+            <div className="main-bottom">
+                <SearchBox
+                    value={inputValue}
+                    onChange={e => setInputValue(e.target.value)}
+                    onSend={handleSend}
+                    disabled={isWaitingResponse}
+                />
+                <p className="bottom-info">
+                    specify the outputs you require below!
+                </p>
             </div>
         </div>
     );
