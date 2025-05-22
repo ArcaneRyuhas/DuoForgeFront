@@ -1,9 +1,7 @@
 import React from 'react';
 import './MarkdownRenderer.css';
 
-const MarkdownRenderer = ({ content }) => {
-    console.log('MarkdownRenderer received content:', content); // Debug log
-    
+const MarkdownRenderer = ({ content }) => {    
     if (!content) {
         return <div>No content</div>;
     }
@@ -175,7 +173,6 @@ const MarkdownRenderer = ({ content }) => {
     };
 
     const renderedElements = renderMarkdown(content);
-    console.log('Rendered elements:', renderedElements); // Debug log
 
     return (
         <div className="markdown-renderer">

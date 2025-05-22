@@ -6,8 +6,11 @@ import SearchBox from '../SearchBox/SearchBox';
 import Nav from '../Nav/Nav';
 import ChatContainer from '../ChatContainer/ChatContainer';
 import DynamicButtonGroup from '../DynamicButtonGroup/DynamicButtonGroup';
+import { useStageManager } from '../../hooks/stageManager';
+import { ArtifactStages, GenerationStages } from '../../constants/artifactStages';
 
-const Main = ({user}) => {
+
+const Main = ({ user }) => {
     const [disabledModifyIndexes, setDisabledModifyIndexes] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [isWaitingResponse, setIsWaitingResponse] = useState(false);
@@ -16,6 +19,13 @@ const Main = ({user}) => {
         diagrams: [],
         code: []
     });
+    const {
+        artifactStage,
+        generationStage,
+        advanceArtifactStage,
+        setGenerationStage,
+        reset,
+    } = useStageManager();
 
     // Define your button groups data
     const buttonGroups = [
@@ -27,8 +37,8 @@ const Main = ({user}) => {
         {
             title: 'Code',
             buttons: [
-                'Python', 'JavaScript', 'Java', 'C++', 'C#', 
-                'PHP', 'Ruby', 'Go', 'Swift', 'Kotlin', 
+                'Python', 'JavaScript', 'Java', 'C++', 'C#',
+                'PHP', 'Ruby', 'Go', 'Swift', 'Kotlin',
                 'SQL', 'HTML', 'CSS'
             ],
             icon: assets.code_icon
@@ -42,79 +52,54 @@ const Main = ({user}) => {
         }));
     };
 
-    // Helper function to determine if content should be rendered as markdown
     const shouldRenderAsMarkdown = (text) => {
         if (!text) return false;
-        
-        // Check for common markdown patterns
+
         const markdownPatterns = [
-            /^#+\s/m,           // Headers (# ## ###)
-            /\*\*.*\*\*/,       // Bold text
-            /\*.*\*/,           // Italic text
-            /`.*`/,             // Inline code
-            /```[\s\S]*```/,    // Code blocks
-            /^\s*[-*+]\s/m,     // Unordered lists
-            /^\s*\d+\.\s/m,     // Ordered lists
-            /^\s*>/m,           // Blockquotes
-            /\[.*\]\(.*\)/,     // Links
+            /^#+\s/m,
+            /\*\*.*\*\*/,
+            /\*.*\*/,
+            /`.*`/,
+            /```[\s\S]*```/,
+            /^\s*[-*+]\s/m,
+            /^\s*\d+\.\s/m,
+            /^\s*>/m,
+            /\[.*\]\(.*\)/,
         ];
-        
+
         return markdownPatterns.some(pattern => pattern.test(text));
     };
 
-    const handleSend = text => {
-        if (!text.trim()) return;
-
+    const disableButtons = () => {
         const lastBotIndex = [...messages].reverse().findIndex(m => m.sender === 'bot');
         if (lastBotIndex !== -1) {
             const actualIndex = messages.length - 1 - lastBotIndex;
             setDisabledModifyIndexes(prev => [...prev, actualIndex]);
         }
-        
-        // Add user message (user messages typically don't need markdown)
-        setMessages(ms => [...ms, { 
-            sender: 'user', 
-            text,
-            isMarkdown: false 
-        }]);
-        
+    }
+
+    const sendMessage = (text, user) => {
+        let isMarkdown = shouldRenderAsMarkdown(text);
+        setMessages(ms => [...ms, { sender: user, text, isMarkdown}]);
+        setInputValue('');
+    }
+
+    const handleSend = text => {
+        if (!text.trim()) return;
+
+        disableButtons();
         setInputValue('');
         setIsWaitingResponse(true);
-
-        // You can now include selected technologies in your API call
-        const requestData = {
-            message: text,
-            selectedTechnologies: selectedTechnologies
-        };
+        sendMessage(text, 'user');
+        setGenerationStage(GenerationStages.Modifying);
 
         generateJiraStories(user?.profile?.sub, text)
             .then(data => {
-                console.log('API Response data:', data); // Debug log
-                console.log('Jira stories text:', data.jira_stories); // Debug log
-                
-                // For now, let's use the raw text and force markdown rendering
-                // The API seems to return malformed markdown, so we'll work with what we get
-                
-                console.log('Raw API text:', data.jira_stories); // Debug log
-                
-                // Add bot message - force markdown rendering for Jira stories
-                setMessages(ms => [...ms, { 
-                    sender: 'bot', 
-                    text: data.jira_stories, // Use raw text for now
-                    isMarkdown: true // Force markdown for Jira stories
-                }]);
-                
-                setIsWaitingResponse(false);
+                sendMessage(data.jira_stories, 'bot');
             })
             .catch(err => {
-                // Add error message (typically plain text)
-                setMessages(ms => [...ms, { 
-                    sender: 'bot', 
-                    text: "Sorry, there was an error.",
-                    isMarkdown: false 
-                }]);
-                
-                setIsWaitingResponse(false);
+                sendMessage("Sorry, there was an error.", 'bot');
+                //LOG the error for debugging
                 console.error(err);
             });
     };
@@ -125,8 +110,17 @@ const Main = ({user}) => {
 
     const handleContinue = (index) => {
         setDisabledModifyIndexes(prev => [...prev, index]);
-        console.log('Continue clicked for message', index);
+        advanceArtifactStage();
+        setGenerationStage(GenerationStages.Creating);
     };
+
+    useEffect(() => {
+        console.log('Generation stage advanced to:', generationStage);
+    }, [generationStage]);
+
+    useEffect(() => {
+        console.log('Artifact stage advanced to:', artifactStage);
+    }, [artifactStage]);
 
     const mainContainerRef = useRef(null);
     const prevMessagesLength = useRef(0);
@@ -142,23 +136,6 @@ const Main = ({user}) => {
         }
         prevMessagesLength.current = messages.length;
     }, [messages]);
-
-    // Debug: Log messages when they change
-    useEffect(() => {
-        console.log('Messages updated:', messages);
-        messages.forEach((msg, index) => {
-            console.log(`Message ${index}:`, {
-                sender: msg.sender,
-                isMarkdown: msg.isMarkdown,
-                textPreview: msg.text?.substring(0, 100) + '...'
-            });
-        });
-    }, [messages]);
-
-    // Debug: Log selected technologies when they change
-    useEffect(() => {
-        console.log('Selected technologies:', selectedTechnologies);
-    }, [selectedTechnologies]);
 
     return (
         <div className="main">
