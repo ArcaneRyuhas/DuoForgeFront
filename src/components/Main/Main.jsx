@@ -5,31 +5,42 @@ import { generateJiraStories } from '../../api/generation';
 import SearchBox from '../SearchBox/SearchBox';
 import Nav from '../Nav/Nav';
 import ChatContainer from '../ChatContainer/ChatContainer';
+import DynamicButtonGroup from '../DynamicButtonGroup/DynamicButtonGroup';
 
 const Main = ({user}) => {
-
-    const [buttonGraphvizIsActive, buttonGraphvizsetActive] = useState(false);
-    const [buttonMermaidIsActive, buttonMermaidsetActive] = useState(false);
-    const [buttonUMLIsActive, buttonUMLsetActive] = useState(false);
-    const [buttonPythonIsActive, buttonPythonsetActive] = useState(false);
-    const [buttonJavaScriptIsActive, buttonJavaScriptsetActive] = useState(false);
-    const [buttonJavaIsActive, buttonJavasetActive] = useState(false);
-    const [buttonCppIsActive, buttonCppsetActive] = useState(false);
-    const [buttonCsharpIsActive, buttonCsharpsetActive] = useState(false);
-    const [buttonPHPIsActive, buttonPHPsetActive] = useState(false);
-    const [buttonRubyIsActive, buttonRubysetActive] = useState(false);
-    const [buttonGoIsActive, buttonGosetActive] = useState(false);
-    const [buttonSwiftIsActive, buttonSwiftsetActive] = useState(false);
-    const [buttonKotlinIsActive, buttonKotlinsetActive] = useState(false);
-    const [buttonSQLIsActive, buttonSQLsetActive] = useState(false);
-    const [buttonHTMLIsActive, buttonHTMLsetActive] = useState(false);
-    const [buttonCSSIsActive, buttonCSSsetActive] = useState(false);
-
     const [disabledModifyIndexes, setDisabledModifyIndexes] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [isWaitingResponse, setIsWaitingResponse] = useState(false);
     const [messages, setMessages] = useState([]);
+    const [selectedTechnologies, setSelectedTechnologies] = useState({
+        diagrams: [],
+        code: []
+    });
 
+    // Define your button groups data
+    const buttonGroups = [
+        {
+            title: 'Diagrams',
+            buttons: ['UML', 'Graphviz', 'Mermaid'],
+            icon: assets.bulb_icon
+        },
+        {
+            title: 'Code',
+            buttons: [
+                'Python', 'JavaScript', 'Java', 'C++', 'C#', 
+                'PHP', 'Ruby', 'Go', 'Swift', 'Kotlin', 
+                'SQL', 'HTML', 'CSS'
+            ],
+            icon: assets.code_icon
+        }
+    ];
+
+    const handleSelectionChange = (category, activeButtons) => {
+        setSelectedTechnologies(prev => ({
+            ...prev,
+            [category]: activeButtons
+        }));
+    };
 
     const handleSend = text => {
         if (!text.trim()) return;
@@ -39,13 +50,20 @@ const Main = ({user}) => {
             const actualIndex = messages.length - 1 - lastBotIndex;
             setDisabledModifyIndexes(prev => [...prev, actualIndex]);
         }
+        
         setMessages(ms => [...ms, { sender: 'user', text }]);
         setInputValue('');
         setIsWaitingResponse(true);
 
+        // You can now include selected technologies in your API call
+        const requestData = {
+            message: text,
+            selectedTechnologies: selectedTechnologies
+        };
+
         generateJiraStories(user?.profile?.sub, text)
             .then(data => {
-                setMessages(ms => [...ms, { sender: 'bot', text: data.jira_stories }]); // Adjust 'data.response' as needed
+                setMessages(ms => [...ms, { sender: 'bot', text: data.jira_stories }]);
                 setIsWaitingResponse(false);
             })
             .catch(err => {
@@ -79,6 +97,10 @@ const Main = ({user}) => {
         prevMessagesLength.current = messages.length;
     }, [messages]);
 
+    // Debug: Log selected technologies when they change
+    useEffect(() => {
+        console.log('Selected technologies:', selectedTechnologies);
+    }, [selectedTechnologies]);
 
     return (
         <div className="main">
@@ -93,34 +115,15 @@ const Main = ({user}) => {
                     </p>
                 </div>
                 <div className="cards">
-                    <div className="card">
-                        <p>Diagrams</p>
-                        <div>
-                            <button className={buttonUMLIsActive ? 'active' : null} onClick={() => buttonUMLsetActive(prev => !prev)} >UML</button>
-                            <button className={buttonGraphvizIsActive ? 'active' : null} onClick={() => buttonGraphvizsetActive(prev => !prev)} >Graphviz</button>
-                            <button className={buttonMermaidIsActive ? 'active' : null} onClick={() => buttonMermaidsetActive(prev => !prev)} >Mermaid</button>
-                        </div>
-                        <img src={assets.bulb_icon} />
-                    </div>
-                    <div className="card">
-                        <p>Code</p>
-                        <div>
-                            <button className={buttonPythonIsActive ? 'active' : null} onClick={() => buttonPythonsetActive(prev => !prev)} >Python</button>
-                            <button className={buttonJavaScriptIsActive ? 'active' : null} onClick={() => buttonJavaScriptsetActive(prev => !prev)} >JavaScript</button>
-                            <button className={buttonJavaIsActive ? 'active' : null} onClick={() => buttonJavasetActive(prev => !prev)} >Java</button>
-                            <button className={buttonCppIsActive ? 'active' : null} onClick={() => buttonCppsetActive(prev => !prev)} >C++</button>
-                            <button className={buttonCsharpIsActive ? 'active' : null} onClick={() => buttonCsharpsetActive(prev => !prev)} >C#</button>
-                            <button className={buttonPHPIsActive ? 'active' : null} onClick={() => buttonPHPsetActive(prev => !prev)} >PHP</button>
-                            <button className={buttonRubyIsActive ? 'active' : null} onClick={() => buttonRubysetActive(prev => !prev)} >Ruby</button>
-                            <button className={buttonGoIsActive ? 'active' : null} onClick={() => buttonGosetActive(prev => !prev)} >Go</button>
-                            <button className={buttonSwiftIsActive ? 'active' : null} onClick={() => buttonSwiftsetActive(prev => !prev)} >Swift</button>
-                            <button className={buttonKotlinIsActive ? 'active' : null} onClick={() => buttonKotlinsetActive(prev => !prev)} >Kotlin</button>
-                            <button className={buttonSQLIsActive ? 'active' : null} onClick={() => buttonSQLsetActive(prev => !prev)} >SQL</button>
-                            <button className={buttonHTMLIsActive ? 'active' : null} onClick={() => buttonHTMLsetActive(prev => !prev)} >HTML</button>
-                            <button className={buttonCSSIsActive ? 'active' : null} onClick={() => buttonCSSsetActive(prev => !prev)} >CSS</button>
-                        </div>
-                        <img src={assets.code_icon} />
-                    </div>
+                    {buttonGroups.map(group => (
+                        <DynamicButtonGroup
+                            key={group.title}
+                            title={group.title}
+                            buttons={group.buttons}
+                            icon={group.icon}
+                            onSelectionChange={handleSelectionChange}
+                        />
+                    ))}
                 </div>
                 <ChatContainer
                     messages={messages}

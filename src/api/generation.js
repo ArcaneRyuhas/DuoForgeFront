@@ -12,3 +12,31 @@ export async function generateJiraStories(userId, requirement) {
         requirement: requirement,
     });
 }
+
+
+/**
+ * Calls the backend to generate Mermaid Diagrams.
+ * @param {string} userId - The user ID.
+ * @param {string} diagram_type - The type of diagram required.
+ * @returns {Promise<Object>} The response from the backend.
+ */
+export async function generateMermaidDiagrams(userId, diagram_type) {
+    return apiPost('/generate/diagram', {
+        user_id: userId,
+        diagram_type: diagram_type,
+    });
+}
+
+/**
+ * Calls the backend to generate code.
+ * @param {string} userId - The user ID.
+ * @param {string} programmingLanguage - The programming language required.
+ * @returns {Promise<Object>} The response from the backend.
+ */
+
+export async function generateCode(userId, language) {
+    return apiPost('/generate/code', {
+        user_id: userId,
+        programming_language: programmingLanguage,
+    }); 
+}
