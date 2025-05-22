@@ -42,6 +42,26 @@ const Main = ({user}) => {
         }));
     };
 
+    // Helper function to determine if content should be rendered as markdown
+    const shouldRenderAsMarkdown = (text) => {
+        if (!text) return false;
+        
+        // Check for common markdown patterns
+        const markdownPatterns = [
+            /^#+\s/m,           // Headers (# ## ###)
+            /\*\*.*\*\*/,       // Bold text
+            /\*.*\*/,           // Italic text
+            /`.*`/,             // Inline code
+            /```[\s\S]*```/,    // Code blocks
+            /^\s*[-*+]\s/m,     // Unordered lists
+            /^\s*\d+\.\s/m,     // Ordered lists
+            /^\s*>/m,           // Blockquotes
+            /\[.*\]\(.*\)/,     // Links
+        ];
+        
+        return markdownPatterns.some(pattern => pattern.test(text));
+    };
+
     const handleSend = text => {
         if (!text.trim()) return;
 
@@ -51,7 +71,13 @@ const Main = ({user}) => {
             setDisabledModifyIndexes(prev => [...prev, actualIndex]);
         }
         
-        setMessages(ms => [...ms, { sender: 'user', text }]);
+        // Add user message (user messages typically don't need markdown)
+        setMessages(ms => [...ms, { 
+            sender: 'user', 
+            text,
+            isMarkdown: false 
+        }]);
+        
         setInputValue('');
         setIsWaitingResponse(true);
 
@@ -63,11 +89,31 @@ const Main = ({user}) => {
 
         generateJiraStories(user?.profile?.sub, text)
             .then(data => {
-                setMessages(ms => [...ms, { sender: 'bot', text: data.jira_stories }]);
+                console.log('API Response data:', data); // Debug log
+                console.log('Jira stories text:', data.jira_stories); // Debug log
+                
+                // For now, let's use the raw text and force markdown rendering
+                // The API seems to return malformed markdown, so we'll work with what we get
+                
+                console.log('Raw API text:', data.jira_stories); // Debug log
+                
+                // Add bot message - force markdown rendering for Jira stories
+                setMessages(ms => [...ms, { 
+                    sender: 'bot', 
+                    text: data.jira_stories, // Use raw text for now
+                    isMarkdown: true // Force markdown for Jira stories
+                }]);
+                
                 setIsWaitingResponse(false);
             })
             .catch(err => {
-                setMessages(ms => [...ms, { sender: 'bot', text: "Sorry, there was an error." }]);
+                // Add error message (typically plain text)
+                setMessages(ms => [...ms, { 
+                    sender: 'bot', 
+                    text: "Sorry, there was an error.",
+                    isMarkdown: false 
+                }]);
+                
                 setIsWaitingResponse(false);
                 console.error(err);
             });
@@ -95,6 +141,18 @@ const Main = ({user}) => {
             }
         }
         prevMessagesLength.current = messages.length;
+    }, [messages]);
+
+    // Debug: Log messages when they change
+    useEffect(() => {
+        console.log('Messages updated:', messages);
+        messages.forEach((msg, index) => {
+            console.log(`Message ${index}:`, {
+                sender: msg.sender,
+                isMarkdown: msg.isMarkdown,
+                textPreview: msg.text?.substring(0, 100) + '...'
+            });
+        });
     }, [messages]);
 
     // Debug: Log selected technologies when they change
