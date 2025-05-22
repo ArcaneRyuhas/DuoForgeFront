@@ -1,31 +1,29 @@
 // src/hooks/useStageManager.js
 import { useState, useCallback, useRef } from 'react';
-
-const ArtifactStages = ['Documentation', 'Diagram', 'Code', 'Conversation'];
-const GenerationStages = ['Creating', 'Modifying'];
+import { ArtifactStagesArray, GenerationStagesArray} from '../constants/artifactStages';
 
 class StageManager {
     constructor() {
-        this.artifactStage = ArtifactStages[0];
-        this.generationStage = GenerationStages[0];
+        this.artifactStage = ArtifactStagesArray[0];
+        this.generationStage = GenerationStagesArray[0];
     }
 
     advanceArtifactStage() {
-        const idx = ArtifactStages.indexOf(this.artifactStage);
-        if (idx < ArtifactStages.length - 1) {
-            this.artifactStage = ArtifactStages[idx + 1];
+        const idx = ArtifactStagesArray.indexOf(this.artifactStage);
+        if (idx < ArtifactStagesArray.length - 1) {
+            this.artifactStage = ArtifactStagesArray[idx + 1];
         }
     }
 
     setGenerationStage(stage) {
-        if (GenerationStages.includes(stage)) {
+        if (GenerationStagesArray.includes(stage)) {
             this.generationStage = stage;
         }
     }
 
     reset() {
-        this.artifactStage = ArtifactStages[0];
-        this.generationStage = GenerationStages[0];
+        this.artifactStage = ArtifactStagesArray[0];
+        this.generationStage = GenerationStagesArray[0];
     }
 }
 
@@ -57,8 +55,5 @@ export function useStageManager() {
         advanceArtifactStage,
         setGenerationStage,
         reset,
-        // si quieres exponer las listas originales:
-        ArtifactStages,
-        GenerationStages,
     };
 }
