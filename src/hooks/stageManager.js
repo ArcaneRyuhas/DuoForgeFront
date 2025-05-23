@@ -1,6 +1,6 @@
 // src/hooks/useStageManager.js
 import { useState, useCallback, useRef } from 'react';
-import { ArtifactStagesArray, GenerationStagesArray} from '../constants/artifactStages';
+import { ArtifactStagesArray, GenerationStagesArray} from '../constants/artifactStages.js';
 
 class StageManager {
     constructor() {

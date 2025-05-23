@@ -1,24 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Main.css';
-import { assets } from '../../assets/assets';
-import { generateJiraStories } from '../../api/generation';
 import SearchBox from '../SearchBox/SearchBox';
 import Nav from '../Nav/Nav';
 import ChatContainer from '../ChatContainer/ChatContainer';
-import DynamicButtonGroup from '../DynamicButtonGroup/DynamicButtonGroup';
 import { useStageManager } from '../../hooks/stageManager';
 import { ArtifactStages, GenerationStages } from '../../constants/artifactStages';
+import { generateJiraStories, generateMermaidDiagrams, generateCode } from '../../api/generation';
+import { modifyJiraStories, modifyMermaidDiagrams, modifyCode } from '../../api/modify';
 
+function extractProgrammingLanguage(input) {
+    const languages = [
+        'Python', 'JavaScript', 'Java', 'C++', 'C#', 'PHP', 'Ruby', 'Go', 'Swift', 'Kotlin', 'SQL', 'HTML', 'CSS'
+    ];
+    const found = languages.find(lang =>
+        new RegExp(`\\b${lang}\\b`, 'i').test(input)
+    );
+    return found || '';
+}
 
 const Main = ({ user }) => {
     const [disabledModifyIndexes, setDisabledModifyIndexes] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [isWaitingResponse, setIsWaitingResponse] = useState(false);
     const [messages, setMessages] = useState([]);
-    const [selectedTechnologies, setSelectedTechnologies] = useState({
-        diagrams: [],
-        code: []
-    });
     const {
         artifactStage,
         generationStage,
@@ -26,32 +30,6 @@ const Main = ({ user }) => {
         setGenerationStage,
         reset,
     } = useStageManager();
-
-    // Define your button groups data
-    const buttonGroups = [
-        {
-            title: 'Diagrams',
-            buttons: ['UML', 'Graphviz', 'Mermaid'],
-            icon: assets.bulb_icon
-        },
-        {
-            title: 'Code',
-            buttons: [
-                'Python', 'JavaScript', 'Java', 'C++', 'C#',
-                'PHP', 'Ruby', 'Go', 'Swift', 'Kotlin',
-                'SQL', 'HTML', 'CSS'
-            ],
-            icon: assets.code_icon
-        }
-    ];
-
-    const handleSelectionChange = (category, activeButtons) => {
-        setSelectedTechnologies(prev => ({
-            ...prev,
-            [category]: activeButtons
-        }));
-    };
-
     const shouldRenderAsMarkdown = (text) => {
         if (!text) return false;
 
@@ -84,6 +62,58 @@ const Main = ({ user }) => {
         setInputValue('');
     }
 
+    const executeStageBasedAction = async (inputText) => {
+        try {
+            let response;
+            const userId = user?.profile?.sub;
+            
+            console.log(`Current stage: ${artifactStage} - ${generationStage}`);
+            if (artifactStage === ArtifactStages.Documentation) {
+                if (generationStage === GenerationStages.Creating) {
+                    response = await generateJiraStories(userId, inputText);
+                } else if (generationStage === GenerationStages.Modifying) {
+                    response = await modifyJiraStories(userId, inputText);
+                }
+            } else if (artifactStage === ArtifactStages.Diagram) {
+                if (generationStage === GenerationStages.Creating) {
+                    response = await generateMermaidDiagrams(userId, inputText);
+                } else if (generationStage === GenerationStages.Modifying) {
+                    response = await modifyMermaidDiagrams(userId, inputText);
+                }
+            } else if (artifactStage === ArtifactStages.Code) {
+                const programmingLanguage = extractProgrammingLanguage(inputText);
+                if (generationStage === GenerationStages.Creating) {
+                    response = await generateCode(userId, inputText, programmingLanguage);
+                } else if (generationStage === GenerationStages.Modifying) {
+                    response = await modifyCode(userId, inputText, programmingLanguage);
+                }
+            } else {
+                throw new Error(`Unsupported stage: ${artifactStage}`);
+            }
+
+            let responseText = '';
+            if (response.jira_stories) {
+                responseText = response.jira_stories;
+            } else if (response.diagram) {
+                responseText = response.diagram;
+            } else if (response.code) {
+                responseText = response.code;
+            } else if (response.modified_content) {
+                responseText = response.modified_content;
+            } else {
+                responseText = JSON.stringify(response, null, 2);
+            }
+
+            sendMessage(responseText, 'bot');
+            setIsWaitingResponse(false);
+            
+        } catch (error) {
+            console.error('API call failed:', error);
+            sendMessage("Sorry, there was an error processing your request.", 'bot');
+            setIsWaitingResponse(false);
+        }
+    };
+
     const handleSend = text => {
         if (!text.trim()) return;
 
@@ -91,35 +121,46 @@ const Main = ({ user }) => {
         setInputValue('');
         setIsWaitingResponse(true);
         sendMessage(text, 'user');
-        setGenerationStage(GenerationStages.Modifying);
-
-        generateJiraStories(user?.profile?.sub, text)
-            .then(data => {
-                sendMessage(data.jira_stories, 'bot');
-            })
-            .catch(err => {
-                sendMessage("Sorry, there was an error.", 'bot');
-                //LOG the error for debugging
-                console.error(err);
-            });
+        executeStageBasedAction(text);
     };
+        const [shouldShowStageMessage, setShouldShowStageMessage] = useState(false);
+        const [stageMessageType, setStageMessageType] = useState('');
 
     const handleModify = (index) => {
-        setIsWaitingResponse(prev => !prev);
+        setGenerationStage(GenerationStages.Modifying);
+        setIsWaitingResponse(false);
+
+        setStageMessageType('modify');
+        setShouldShowStageMessage(true);
     };
 
     const handleContinue = (index) => {
         setDisabledModifyIndexes(prev => [...prev, index]);
         advanceArtifactStage();
         setGenerationStage(GenerationStages.Creating);
+
+        setStageMessageType('continue');
+        setShouldShowStageMessage(true);
     };
 
     useEffect(() => {
         console.log('Generation stage advanced to:', generationStage);
+        if (shouldShowStageMessage && stageMessageType === 'modify' && generationStage === GenerationStages.Modifying) {
+            sendMessage("What changes would you like me to apply?", 'bot');
+            setShouldShowStageMessage(false);
+        }
     }, [generationStage]);
 
     useEffect(() => {
         console.log('Artifact stage advanced to:', artifactStage);
+        if (shouldShowStageMessage && stageMessageType === 'continue') {
+            if (artifactStage === ArtifactStages.Diagram) {
+                sendMessage("What type of diagram do you want me to generate?", 'bot');
+            } else if (artifactStage === ArtifactStages.Code) {
+                sendMessage("In which programming language would you like the code?", 'bot');
+            }
+            setShouldShowStageMessage(false);
+        }
     }, [artifactStage]);
 
     const mainContainerRef = useRef(null);
@@ -137,6 +178,24 @@ const Main = ({ user }) => {
         prevMessagesLength.current = messages.length;
     }, [messages]);
 
+    const getCurrentActionDescription = () => {
+        const actions = {
+            [ArtifactStages.Documentation]: {
+                [GenerationStages.Creating]: 'Generating documentation (Jira stories)',
+                [GenerationStages.Modifying]: 'Modifying documentation'
+            },
+            [ArtifactStages.Diagram]: {
+                [GenerationStages.Creating]: 'Generating diagrams',
+                [GenerationStages.Modifying]: 'Modifying diagrams'
+            },
+            [ArtifactStages.Code]: {
+                [GenerationStages.Creating]: 'Generating code',
+                [GenerationStages.Modifying]: 'Modifying code'
+            }
+        };
+        return actions[artifactStage]?.[generationStage] || 'Ready for input';
+    };
+
     return (
         <div className="main">
             <Nav />
@@ -148,17 +207,6 @@ const Main = ({ user }) => {
                     <p>
                         <span>What are we developing today?</span>
                     </p>
-                </div>
-                <div className="cards">
-                    {buttonGroups.map(group => (
-                        <DynamicButtonGroup
-                            key={group.title}
-                            title={group.title}
-                            buttons={group.buttons}
-                            icon={group.icon}
-                            onSelectionChange={handleSelectionChange}
-                        />
-                    ))}
                 </div>
                 <ChatContainer
                     messages={messages}
@@ -175,7 +223,10 @@ const Main = ({ user }) => {
                     disabled={isWaitingResponse}
                 />
                 <p className="bottom-info">
-                    specify the outputs you require below!
+                    {isWaitingResponse ? 
+                        `Processing: ${getCurrentActionDescription()}...` : 
+                        "Specify the requirements for your project!"
+                    }
                 </p>
             </div>
         </div>
