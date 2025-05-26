@@ -6,7 +6,7 @@ import { apiPost } from './client';
  * @param {string} modificationJiraPrompt - The modification text to the Jira.
  * @returns {Promise<Object>} The response from the backend.
  */
-export async function modifyJiraStories(userId, requirement) {
+export async function modifyJiraStories(userId, modificationJiraPrompt) {
     return apiPost('/modify_jira_stories/', {
         user_id: userId,
         modification_prompt: modificationJiraPrompt,

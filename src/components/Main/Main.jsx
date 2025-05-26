@@ -12,8 +12,9 @@ function extractProgrammingLanguage(input) {
     const languages = [
         'Python', 'JavaScript', 'Java', 'C++', 'C#', 'PHP', 'Ruby', 'Go', 'Swift', 'Kotlin', 'SQL', 'HTML', 'CSS'
     ];
+    const escapeRegex = str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const found = languages.find(lang =>
-        new RegExp(`\\b${lang}\\b`, 'i').test(input)
+        new RegExp(`\\b${escapeRegex(lang)}\\b`, 'i').test(input)
     );
     return found || '';
 }
