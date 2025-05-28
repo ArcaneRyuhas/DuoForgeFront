@@ -2,7 +2,7 @@ import React from 'react';
 import './ChatContainer.css';
 import MarkdownRenderer from '../MarkdownRenderer/MarkdownRenderer';
 
-const ChatContainer = ({ messages, onModify, onContinue, disabledModifyIndexes }) => {
+const ChatContainer = ({ messages, onModify, onContinue, disabledModifyIndexes, shouldDisableButtons }) => {
     const lastBotMessageIndex = messages.map((m,i) => ({...m, originalIndex:i}))
     .reverse()
     .find(m => m.sender === 'bot')?.originalIndex;
@@ -30,7 +30,8 @@ const ChatContainer = ({ messages, onModify, onContinue, disabledModifyIndexes }
                 {/* Only show buttons for the last bot message and if it's not disabled */}
                 {m.sender === 'bot' &&
                  i == lastBotMessageIndex && 
-                 !disabledModifyIndexes.includes(i) && (
+                 !disabledModifyIndexes.includes(i) &&
+                 !shouldDisableButtons && (
                     <div className="chat-actions" style={{ marginTop: '10px' }}>
                         <button onClick={() => onModify && onModify(i)}>Modify</button>
                         <button onClick={() => onContinue && onContinue(i)}>Continue</button>

@@ -6,7 +6,9 @@ import ChatContainer from '../ChatContainer/ChatContainer';
 import { useStageManager } from '../../hooks/stageManager';
 import { ArtifactStages, GenerationStages } from '../../constants/artifactStages';
 import { generateJiraStories, generateMermaidDiagrams, generateCode } from '../../api/generation';
+import { Conversation } from '../../api/conversation';
 import { modifyJiraStories, modifyMermaidDiagrams, modifyCode } from '../../api/modify';
+
 
 function extractProgrammingLanguage(input) {
     const languages = [
@@ -31,6 +33,73 @@ const Main = ({ user }) => {
         setGenerationStage,
         reset,
     } = useStageManager();
+
+    // Enhanced function to detect Mermaid diagrams
+    const isMermaidDiagram = (text) => {
+        if (!text) return false;
+        
+        const mermaidKeywords = [
+            'graph', 'flowchart', 'sequenceDiagram', 'classDiagram', 'stateDiagram',
+            'erDiagram', 'gantt', 'pie', 'gitgraph', 'mindmap', 'timeline',
+            'journey', 'quadrantChart', 'requirementDiagram', 'c4Context'
+        ];
+        
+        // Remove code block markers if present
+        const cleanText = text.replace(/^```(?:mermaid)?\s*\n?/, '').replace(/\n?```\s*$/, '').trim();
+        
+        // Check if any line starts with a mermaid keyword
+        const lines = cleanText.split('\n');
+        return lines.some(line => {
+            const trimmedLine = line.trim().toLowerCase();
+            return mermaidKeywords.some(keyword => trimmedLine.startsWith(keyword));
+        });
+    };
+
+    const isCodeContent = (text) => {
+        if (!text) return false;
+        
+        const codeIndicators = [
+            // Function/method definitions
+            /function\s+\w+\s*\(/,
+            /def\s+\w+\s*\(/,
+            /public\s+\w+\s+\w+\s*\(/,
+            /private\s+\w+\s+\w+\s*\(/,
+            
+            // Class definitions
+            /class\s+\w+/,
+            
+            // Import statements
+            /import\s+/,
+            /from\s+\w+\s+import/,
+            /#include\s*</,
+            
+            // Common programming constructs
+            /\{\s*$/m, // Opening braces on their own line
+            /^\s*\}/m, // Closing braces
+            /;\s*$/m,  // Semicolons at end of lines
+            
+            // HTML/XML tags
+            /<[^>]+>/,
+            
+            // CSS selectors and properties
+            /\.[a-zA-Z-]+\s*\{/,
+            /#[a-zA-Z-]+\s*\{/,
+            /[a-zA-Z-]+\s*:\s*[^;]+;/
+        ];
+        
+        const lines = text.split('\n');
+        const nonEmptyLines = lines.filter(line => line.trim().length > 0);
+        
+        if (nonEmptyLines.length === 0) return false;
+        
+        const codeLines = nonEmptyLines.filter(line => 
+            codeIndicators.some(pattern => pattern.test(line))
+        );
+        
+        // If more than 30% of non-empty lines look like code, treat as code
+        return (codeLines.length / nonEmptyLines.length) > 0.3;
+    };
+
     const shouldRenderAsMarkdown = (text) => {
         if (!text) return false;
 
@@ -49,6 +118,56 @@ const Main = ({ user }) => {
         return markdownPatterns.some(pattern => pattern.test(text));
     };
 
+    const shouldUseMarkdownForResponse = (text, sender) => {
+        // Debug logging
+        console.log('Markdown check:', {
+            artifactStage,
+            generationStage,
+            sender,
+            hasMarkdownPatterns: shouldRenderAsMarkdown(text),
+            isMermaid: isMermaidDiagram(text),
+            isCode: isCodeContent(text),
+            textPreview: text?.substring(0, 100)
+        });
+
+        if (artifactStage === ArtifactStages.Conversation) {
+            return shouldRenderAsMarkdown(text);
+        }
+
+        // For Code stage 
+        if(sender == 'bot' && 
+            (artifactStage === ArtifactStages.Code ||
+            artifactStage === 'Code' ||
+            artifactStage === 'code') &&
+            isCodeContent(text)) {
+            return true;
+        }
+
+        // For Documentation stage 
+        if (sender === 'bot' && 
+            (artifactStage === ArtifactStages.Documentation || 
+             artifactStage === 'Documentation' || 
+             artifactStage === 'documentation')) {
+            return true;
+        }
+        
+        // For Diagram stage
+        if (sender === 'bot' && 
+            (artifactStage === ArtifactStages.Diagram || 
+             artifactStage === 'Diagram' || 
+             artifactStage === 'diagram')) {
+            return true;
+        }
+        
+        // Also check if the content naturally has markdown patterns
+        const hasMarkdownPatterns = shouldRenderAsMarkdown(text);
+        if (hasMarkdownPatterns) {
+            return true;
+        }
+        
+        return false;
+    };
+
     const disableButtons = () => {
         const lastBotIndex = [...messages].reverse().findIndex(m => m.sender === 'bot');
         if (lastBotIndex !== -1) {
@@ -58,8 +177,15 @@ const Main = ({ user }) => {
     }
 
     const sendMessage = (text, user) => {
-        let isMarkdown = shouldRenderAsMarkdown(text);
-        setMessages(ms => [...ms, { sender: user, text, isMarkdown}]);
+        let isMarkdown = shouldUseMarkdownForResponse(text, user);
+        console.log('Sending message:', { sender: user, isMarkdown, textPreview: text?.substring(0, 50) });
+        setMessages(ms => [...ms, { 
+            sender: user, 
+            text, 
+            isMarkdown,
+            artifactStage: artifactStage,
+            forceCodeRendering: artifactStage === ArtifactStages.Code && user === 'bot'
+        }]);
         setInputValue('');
     }
 
@@ -69,7 +195,9 @@ const Main = ({ user }) => {
             const userId = user?.profile?.sub;
             
             console.log(`Current stage: ${artifactStage} - ${generationStage}`);
-            if (artifactStage === ArtifactStages.Documentation) {
+            if (artifactStage == ArtifactStages.Conversation){
+                response = await Conversation(userId, inputText);
+            } else if (artifactStage === ArtifactStages.Documentation) {
                 if (generationStage === GenerationStages.Creating) {
                     response = await generateJiraStories(userId, inputText);
                 } else if (generationStage === GenerationStages.Modifying) {
@@ -84,15 +212,17 @@ const Main = ({ user }) => {
             } else if (artifactStage === ArtifactStages.Code) {
                 const programmingLanguage = extractProgrammingLanguage(inputText);
                 if (generationStage === GenerationStages.Creating) {
-                    response = await generateCode(userId, inputText, programmingLanguage);
+                    response = await generateCode(userId, inputText);
                 } else if (generationStage === GenerationStages.Modifying) {
-                    response = await modifyCode(userId, inputText, programmingLanguage);
+                    response = await modifyCode(userId, inputText);
                 }
             } else {
                 throw new Error(`Unsupported stage: ${artifactStage}`);
             }
 
             let responseText = '';
+            console.log('API Response:', response); // Debug log to see the full response
+            
             if (response.jira_stories) {
                 responseText = response.jira_stories;
             } else if (response.diagram) {
@@ -101,10 +231,20 @@ const Main = ({ user }) => {
                 responseText = response.code;
             } else if (response.modified_content) {
                 responseText = response.modified_content;
+            } else if (response.response) { 
+                responseText = response.response;
+            } else if (response.stories) { 
+                responseText = response.stories;
+            } else if (response.content) { 
+                responseText = response.content;
+            } else if (response.data) {
+                responseText = response.data;
             } else {
+                console.warn('Unexpected API response format:', response);
                 responseText = JSON.stringify(response, null, 2);
             }
 
+            
             sendMessage(responseText, 'bot');
             setIsWaitingResponse(false);
             
@@ -124,10 +264,16 @@ const Main = ({ user }) => {
         sendMessage(text, 'user');
         executeStageBasedAction(text);
     };
-        const [shouldShowStageMessage, setShouldShowStageMessage] = useState(false);
-        const [stageMessageType, setStageMessageType] = useState('');
+
+    const [shouldShowStageMessage, setShouldShowStageMessage] = useState(false);
+    const [stageMessageType, setStageMessageType] = useState('');
 
     const handleModify = (index) => {
+        // Don't allow modify if in Conversation stage
+        if (artifactStage === ArtifactStages.Conversation) {
+            return;
+        }
+        
         setGenerationStage(GenerationStages.Modifying);
         setIsWaitingResponse(false);
 
@@ -136,6 +282,11 @@ const Main = ({ user }) => {
     };
 
     const handleContinue = (index) => {
+        // Don't allow continue if in Conversation stage
+        if (artifactStage === ArtifactStages.Conversation) {
+            return;
+        }
+        
         setDisabledModifyIndexes(prev => [...prev, index]);
         advanceArtifactStage();
         setGenerationStage(GenerationStages.Creating);
@@ -159,11 +310,14 @@ const Main = ({ user }) => {
                 sendMessage("What type of diagram do you want me to generate?", 'bot');
             } else if (artifactStage === ArtifactStages.Code) {
                 sendMessage("In which programming language would you like the code?", 'bot');
+            } else if (artifactStage === ArtifactStages.Conversation) {
+                sendMessage("Great! Now we can have a normal conversation. What would you like to discuss?", 'bot');
             }
             setShouldShowStageMessage(false);
         }
     }, [artifactStage]);
 
+    
     const mainContainerRef = useRef(null);
     const prevMessagesLength = useRef(0);
 
@@ -180,6 +334,9 @@ const Main = ({ user }) => {
     }, [messages]);
 
     const getCurrentActionDescription = () => {
+        if (artifactStage === ArtifactStages.Conversation) {
+            return 'Having a conversation';
+        }
         const actions = {
             [ArtifactStages.Documentation]: {
                 [GenerationStages.Creating]: 'Generating documentation (Jira stories)',
@@ -196,6 +353,9 @@ const Main = ({ user }) => {
         };
         return actions[artifactStage]?.[generationStage] || 'Ready for input';
     };
+
+    // Check if buttons should be disabled (when in Conversation stage)
+    const shouldDisableButtons = artifactStage === ArtifactStages.Conversation;
 
     return (
         <div className="main">
@@ -214,6 +374,7 @@ const Main = ({ user }) => {
                     onModify={handleModify}
                     onContinue={handleContinue}
                     disabledModifyIndexes={disabledModifyIndexes}
+                    shouldDisableButtons={shouldDisableButtons}
                 />
             </div>
             <div className="main-bottom">
@@ -225,8 +386,10 @@ const Main = ({ user }) => {
                 />
                 <p className="bottom-info">
                     {isWaitingResponse ? 
-                        `Processing: ${getCurrentActionDescription()}...` : 
-                        "Specify the requirements for your project!"
+                        `Processing: ${getCurrentActionDescription()}...` :
+                        artifactStage === ArtifactStages.Conversation ?
+                            "Ask me anything! We're just having a conversation." : 
+                            "Specify the requirements for your project!"
                     }
                 </p>
             </div>

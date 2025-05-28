@@ -1,10 +1,115 @@
 import React from 'react';
 import './MarkdownRenderer.css';
 
+// MermaidRenderer component for rendering Mermaid diagrams
+const MermaidRenderer = ({ content }) => {
+    const elementRef = React.useRef(null);
+    const renderingRef = React.useRef(false);
+
+    React.useEffect(() => {
+        const renderMermaid = async () => {
+            if (!content || renderingRef.current) return;
+            
+            renderingRef.current = true;
+            
+            try {
+                // Load mermaid dynamically
+                const mermaid = await import('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs');
+                
+                // Initialize mermaid with configuration
+                mermaid.default.initialize({
+                    startOnLoad: false,
+                    theme: 'default',
+                    securityLevel: 'loose',
+                    fontFamily: 'Arial, sans-serif',
+                    flowchart: {
+                        useMaxWidth: true,
+                        htmlLabels: true
+                    }
+                });
+
+                if (elementRef.current) {
+                    // Clear previous content
+                    elementRef.current.innerHTML = '';
+                    
+                    // Generate unique ID for this diagram
+                    const id = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                    
+                    try {
+                        // Render the mermaid diagram
+                        const { svg } = await mermaid.default.render(id, content);
+                        elementRef.current.innerHTML = svg;
+                    } catch (error) {
+                        console.error('Mermaid rendering error:', error);
+                        elementRef.current.innerHTML = `
+                            <div style="padding: 1rem; border: 1px solid #e74c3c; border-radius: 4px; background-color: #fdf2f2; color: #e74c3c;">
+                                <strong>Diagram Error:</strong> Unable to render Mermaid diagram
+                                <details style="margin-top: 0.5rem;">
+                                    <summary>View diagram code</summary>
+                                    <pre style="background: #f8f9fa; padding: 0.5rem; margin-top: 0.5rem; border-radius: 4px; font-size: 0.8rem;">${content}</pre>
+                                </details>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load Mermaid:', error);
+                if (elementRef.current) {
+                    elementRef.current.innerHTML = `
+                        <div style="padding: 1rem; border: 1px solid #e74c3c; border-radius: 4px; background-color: #fdf2f2; color: #e74c3c;">
+                            <strong>Loading Error:</strong> Failed to load Mermaid library
+                        </div>
+                    `;
+                }
+            } finally {
+                renderingRef.current = false;
+            }
+        };
+
+        renderMermaid();
+    }, [content]);
+
+    return (
+        <div 
+            ref={elementRef} 
+            className="mermaid-diagram"
+            style={{ 
+                width: '100%', 
+                textAlign: 'center',
+                padding: '1rem',
+                minHeight: '100px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}
+        >
+            <div style={{ color: '#666' }}>Loading diagram...</div>
+        </div>
+    );
+};
+
 const MarkdownRenderer = ({ content }) => {    
     if (!content) {
         return <div>No content</div>;
     }
+
+    // Function to detect if content is a Mermaid diagram
+    const isMermaidDiagram = (text) => {
+        if (!text) return false;
+        
+        const mermaidKeywords = [
+            'graph', 'flowchart', 'sequenceDiagram', 'classDiagram', 'stateDiagram',
+            'erDiagram', 'gantt', 'pie', 'gitgraph', 'mindmap', 'timeline',
+            'journey', 'quadrantChart', 'requirementDiagram', 'c4Context'
+        ];
+        
+        // Check if any line starts with a mermaid keyword
+        const lines = text.split('\n');
+        return lines.some(line => {
+            const trimmedLine = line.trim().toLowerCase();
+            return mermaidKeywords.some(keyword => trimmedLine.startsWith(keyword));
+        });
+    };
 
     const processInlineMarkdown = (text) => {
         if (!text) return '';
@@ -72,7 +177,7 @@ const MarkdownRenderer = ({ content }) => {
                         dangerouslySetInnerHTML={{ __html: headerText }} />
                 );
             }
-            // Code blocks
+            // Code blocks (enhanced to handle Mermaid diagrams)
             else if (trimmedLine.startsWith('```')) {
                 const codeLines = [];
                 const language = trimmedLine.substring(3).trim(); // Extract language if specified
@@ -83,11 +188,22 @@ const MarkdownRenderer = ({ content }) => {
                     i++;
                 }
                 
-                elements.push(
-                    <pre key={currentIndex++} className="markdown-code-block">
-                        <code className={language ? `language-${language}` : ''}>{codeLines.join('\n')}</code>
-                    </pre>
-                );
+                const codeContent = codeLines.join('\n');
+                
+                // Check if this is a Mermaid diagram
+                if (language.toLowerCase() === 'mermaid' || isMermaidDiagram(codeContent)) {
+                    elements.push(
+                        <div key={currentIndex++} className="markdown-mermaid-container">
+                            <MermaidRenderer content={codeContent} />
+                        </div>
+                    );
+                } else {
+                    elements.push(
+                        <pre key={currentIndex++} className="markdown-code-block">
+                            <code className={language ? `language-${language}` : ''}>{codeContent}</code>
+                        </pre>
+                    );
+                }
             }
             // Unordered lists
             else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
@@ -171,6 +287,17 @@ const MarkdownRenderer = ({ content }) => {
 
         return elements;
     };
+
+    // Check if the entire content is a standalone Mermaid diagram
+    if (isMermaidDiagram(content)) {
+        return (
+            <div className="markdown-renderer">
+                <div className="markdown-mermaid-container">
+                    <MermaidRenderer content={content} />
+                </div>
+            </div>
+        );
+    }
 
     const renderedElements = renderMarkdown(content);
 
