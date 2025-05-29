@@ -1,4 +1,4 @@
-// src/hooks/useStageManager.js
+
 import { useState, useCallback, useRef } from 'react';
 import { ArtifactStagesArray, GenerationStagesArray} from '../constants/artifactStages.js';
 
