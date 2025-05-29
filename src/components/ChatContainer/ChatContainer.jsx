@@ -19,13 +19,19 @@ const ChatContainer = ({
     return (
         <div className="chat-container">
             {messages.map((m, i) => {
-                // Determine if this message should use markdown rendering
-                const useMarkdown = shouldUseMarkdownForResponse(
-                    artifactStage, 
-                    generationStage, 
-                    m.text, 
-                    m.sender
-                );
+                let useMarkdown;
+                if (m.hasOwnProperty('useMarkdown')) {
+                    useMarkdown = m.useMarkdown;
+                } else if (m.hasOwnProperty('isMarkdown')) {
+                    useMarkdown = m.isMarkdown;
+                } else {
+                    useMarkdown = shouldUseMarkdownForResponse(
+                        artifactStage, 
+                        generationStage, 
+                        m.text, 
+                        m.sender
+                    );
+                }
 
                 return (
                     <div key={i} className={`chat-bubble ${m.sender}`} style={{ 
@@ -34,9 +40,9 @@ const ChatContainer = ({
                         padding: '1rem',
                         margin: '0.5rem',
                         borderRadius: '0.5rem',
-                        minHeight: '50px' // Ensure minimum height
+                        minHeight: '50px'
                     }}>
-                        {/* Render text based on markdown detection */}
+                        {/* Render text based on stored or calculated markdown decision */}
                         <div>
                             {useMarkdown ? (
                                 <MarkdownRenderer content={m.text} />

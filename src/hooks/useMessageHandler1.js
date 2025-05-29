@@ -10,20 +10,35 @@ export function useMessageHandler(artifactStage, generationStage, user) {
     const [disabledModifyIndexes, setDisabledModifyIndexes] = useState([]);
 
     const sendMessage = useCallback((text, sender) => {
-        const isMarkdown = shouldUseMarkdownForResponse(text, sender, artifactStage);
-        console.log('Sending message:', { sender, isMarkdown, textPreview: text?.substring(0, 50) });
-        
-        setMessages(prevMessages => [...prevMessages, { 
+        const useMarkdown = shouldUseMarkdownForResponse(
+            artifactStage,
+            generationStage,
+            text,
+            sender
+        );
+
+        console.log('Sending message:', { 
             sender, 
-            text, 
-            isMarkdown,
+            useMarkdown, 
+            artifactStage,
+            generationStage,
+            textPreview: text?.substring(0, 50) });
+        
+        const messageObject = {
+            sender,
+            text,
+            useMarkdown,
             artifactStage: artifactStage,
-            forceCodeRendering: artifactStage === ArtifactStages.Code && sender === 'bot'
-        }]);
-    }, [artifactStage]);
+            generationStage: generationStage,
+            timestamp: Date.now(),
+            isMarkdown: useMarkdown,
+            forceCodeRendering: artifactStage == ArtifactStages.Code && sender == 'bot'
+        };
+
+        setMessages(prevMessages => [...prevMessages, messageObject]);
+    }, [artifactStage, generationStage]);
 
     const disableButtons = useCallback(() => {
-        // Don't disable buttons in Conversation stage since there are no modify/continue buttons
         if (artifactStage === ArtifactStages.Conversation) {
             return;
         }
