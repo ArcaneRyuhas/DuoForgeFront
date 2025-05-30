@@ -3,7 +3,7 @@ import { ArtifactStages, GenerationStages } from '../constants/artifactStages';
 import { generateJiraStories, generateMermaidDiagrams, generateCode } from '../api/generation';
 import { Conversation } from '../api/conversation';
 import { modifyJiraStories, modifyMermaidDiagrams, modifyCode } from '../api/modify';
-import { extractProgrammingLanguage } from '../components/Renderer/Renderer';
+import { extractProgrammingLanguage } from '../components/RenderUtils/contentAnalyzers';
 
 export async function executeStageBasedAction(artifactStage, generationStage, userId, inputText) {
     try {

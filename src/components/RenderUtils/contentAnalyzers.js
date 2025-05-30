@@ -32,7 +32,6 @@ export const isMermaidDiagram = (text) => {
         });
     };
 
-
 // Code renderer
 export const isCodeContent = (text) => {
         if (!text) return false;

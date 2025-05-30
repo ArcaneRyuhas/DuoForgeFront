@@ -3,15 +3,17 @@
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    background-color: #f0f0f0; /* Slightly lighter dark blue (search box background) */
+    background-color: #f0f0f0; 
     padding: 10px 20px;
     border-radius: 50px;
 }
 
 .search-box img {
     width: 24px;
+    height: 24px;
     cursor: pointer;
-    filter: brightness(1.5); /* Lighten the search icon */
+    filter: brightness(0) invert(0); 
+    object-fit: contain;
 }
 
 .search-box input {
@@ -21,7 +23,7 @@
     outline: none;
     padding: 8px;
     font-size: 18px;
-    color: #5d5e5f; /* Light grayish white (input text) */
+    color: #5d5e5f; 
 }
 
 .search-box div {

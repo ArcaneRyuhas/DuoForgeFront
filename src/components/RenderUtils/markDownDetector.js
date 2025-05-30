@@ -1,4 +1,4 @@
-import { shouldRenderAsMarkdown, isMermaidDiagram, isCodeContent } from './Renderer'
+import { shouldRenderAsMarkdown, isMermaidDiagram, isCodeContent } from './contentAnalyzers'
 import { ArtifactStages } from '../../constants/artifactStages';
 import React from 'react';
 

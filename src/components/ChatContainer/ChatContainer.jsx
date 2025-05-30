@@ -1,7 +1,7 @@
 import React from 'react';
 import './ChatContainer.css';
-import MarkdownRenderer from '../Renderer/markdownRenderer1';
-import { shouldUseMarkdownForResponse } from '../Renderer/markDownDetector';
+import MarkdownRenderer from '../MarkDownRenderer/markdownRenderer1';
+import { shouldUseMarkdownForResponse } from '../RenderUtils/markDownDetector';
 
 const ChatContainer = ({ 
     messages, 

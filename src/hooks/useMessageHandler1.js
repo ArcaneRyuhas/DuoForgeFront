@@ -1,5 +1,5 @@
 import {useState, useCallback} from 'react';
-import { shouldUseMarkdownForResponse } from '../components/Renderer/markDownDetector';
+import { shouldUseMarkdownForResponse } from '../components/RenderUtils/markDownDetector';
 import { ArtifactStages } from '../constants/artifactStages';
 import { executeStageBasedAction } from '../api/connectionApi';
 
