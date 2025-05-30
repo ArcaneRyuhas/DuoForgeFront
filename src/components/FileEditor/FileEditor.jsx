@@ -20,10 +20,22 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
     const loadFileContent = async () => {
         setIsLoading(true);
         setError(null);
-        const realFile = file.file || file;
-        
+
         try {
-            const text = await extractFileContent(realFile);
+            let text ='';
+
+            if (file.editedContent !== null && file.editedContent !== undefined) {
+                text = file.editedContent;
+                console.log('Using edited content:', text.length, 'characters');
+            } else if (file.originalContent !== null && file.originalContent !== undefined) {
+                text = file.originalContent;
+                console.log('Using original content:', text.length, 'characters');
+            } else {
+                const realFile = file.file || file;
+                text = await extractFileContent(realFile);
+                console.log('Extracted content from file:', text.length, 'characters');
+            }
+            
             setContent(text);
         } catch (error) {
             console.error('Error reading file:', error);
@@ -39,6 +51,7 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
     };
 
     const handleSave = () => {
+        console.log('Saving content:', content.length, 'characters');
         onSave(file.id, content);
         setHasChanges(false);
         setIsEditing(false);
@@ -49,7 +62,8 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
             const confirm = window.confirm('You have unsaved changes. Are you sure you want to cancel?');
             if (!confirm) return;
         }
-        loadFileContent(); 
+        const savedContent = file.editedContent !== null ? file.editedContent : file.originalContent || '';
+        setContent(savedContent);
         setHasChanges(false);
         setIsEditing(false);
     };
@@ -183,6 +197,9 @@ FileEditor.propTypes = {
         name: PropTypes.string.isRequired,
         type: PropTypes.string.isRequired,
         size: PropTypes.number.isRequired,
+        originalContent: PropTypes.string,
+        editedContent: PropTypes.string,
+        file: PropTypes.object
     }).isRequired,
     onSave: PropTypes.func.isRequired,
     onClose: PropTypes.func.isRequired,
