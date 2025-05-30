@@ -16,13 +16,22 @@ const SearchBox = ({ value, onChange, onSend, onFileUpload, disabled }) => {
     } = useFileUpload(onFileUpload);
 
     const handleKeyDown = e => {
-        if (e.key === 'Enter') {
-            onSend(value);
+        if (e.key === 'Enter' && !disabled && value.trim()) {
+            e.preventDefault(); 
+            onSend(value.trim());
+         }
+    };
+
+    const handleSendClick = () => {
+        if (!disabled && value.trim()) {
+        onSend(value.trim());
         }
     };
 
-    const handleClick = () => {
-        onSend(value);
+    const handleUploadClick = (uploadFunction) => {
+        if (!disabled) {
+            uploadFunction();
+        }
     };
 
     return (
@@ -34,6 +43,7 @@ const SearchBox = ({ value, onChange, onSend, onFileUpload, disabled }) => {
                 onChange={onChange}
                 onKeyDown={handleKeyDown}
                 disabled={disabled}
+                aria-label="Project requirements input"
             />
             <div className="icon-group">
                 <input
@@ -42,33 +52,61 @@ const SearchBox = ({ value, onChange, onSend, onFileUpload, disabled }) => {
                     accept=".pdf,.doc,.docx,.txt"
                     onChange={handleDocumentChange}
                     style={{ display: 'none' }}
+                    aria-label="Document file input"
                 />
                 <input
                     ref={audioInputRef}
                     type="file"
-                    accept="audio/*, .mp3, .wav, .m4a, .ogg"
+                    accept="audio/*,.mp3,.wav,.m4a,.ogg"
                     onChange={handleAudioChange}
                     style={{ display: 'none' }}
+                    aria-label="Audio file input"
                 />
-                <img 
-                    src={assets.file} 
-                    alt="document"
-                    onClick={triggerDocumentUpload}
-                    className='upload-icon'
-                    title= 'Upload Document'
-                />
-                <img 
-                    src={assets.mic_icon} 
-                    alt="mic"
-                    onClick={triggerAudioUpload}
-                    className='upload-icon'
-                    title= 'Upload Audio File' />
-                <img
-                    src={assets.send_icon}
-                    alt="send"
-                    onClick={handleClick}
-                    style={{ cursor: 'pointer' }}
-                />
+
+                <button
+                    type="button"
+                    onClick={() => handleUploadClick(triggerDocumentUpload)}
+                    className="upload-btn"
+                    disabled={disabled}
+                    title="Upload Document"
+                    aria-label="Upload document file"
+                >
+                    <img 
+                        src={assets.file} 
+                        alt=""
+                        className="upload-icon"
+                    />
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => handleUploadClick(triggerAudioUpload)}
+                    className="upload-btn"
+                    disabled={disabled}
+                    title="Upload Audio File"
+                    aria-label="Upload audio file"
+                >
+                    <img 
+                        src={assets.mic_icon} 
+                        alt=""
+                        className="upload-icon"
+                    />
+                </button>
+
+                <button
+                    type="button"
+                    onClick={handleSendClick}
+                    className="send-btn"
+                    disabled={disabled || !value.trim()}
+                    title="Send message"
+                    aria-label="Send message"
+                >
+                    <img
+                        src={assets.send_icon}
+                        alt=""
+                        className="send-icon"
+                    />
+                </button>
             </div>
         </div>
     );
@@ -79,7 +117,11 @@ SearchBox.propTypes = {
     onChange: PropTypes.func.isRequired,
     onSend: PropTypes.func.isRequired,
     onFileUpload: PropTypes.func.isRequired,
-    disable: PropTypes.bool
+    disabled: PropTypes.bool 
+};
+
+SearchBox.defaultProps = {
+    disabled: false
 };
 
 export default SearchBox;

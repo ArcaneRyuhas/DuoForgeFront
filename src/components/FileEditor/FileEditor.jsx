@@ -20,23 +20,28 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
         
         try {
             let text = '';
+            const fileType = file.type ||'';
+            const fileName = file.name || '';
+
             
-            if (file.type === 'text/plain') {
+            if (file.type === 'text/plain' || fileName.endsWith('.txt')) {
                 text = await file.text();
-            } else if (file.type === 'application/pdf') {
-                text = 'PDF content extraction requires additional setup. Please convert to text format.';
-            } else if (file.type.includes('word') || file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
-                text = 'Word document content extraction requires additional setup. Please convert to text format.';
+            } else if (file.type === 'application/pdf' || fileName.endsWith('.pdf')) {
+                text = await extractPDFContent(file);
+            } else if (file.type.includes('word') || file.name.endsWith('.docx') || file.name.endsWith('.doc') || fileType.includes('document')) {
+                 text = await extractWordContent(file);
             } else {
+                try {
                 text = await file.text();
+                } catch (e) {
+                text = 'Unable to extract text content from this file type.';
+            }
             }
             
-            setContent(text);
-        } catch (err) {
-            setError('Failed to read file content. Please ensure it\'s a text file.');
+            return(text);
+        } catch (error) {
             console.error('Error reading file:', err);
-        } finally {
-            setIsLoading(false);
+            throw error;
         }
     };
 
@@ -56,7 +61,7 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
             const confirm = window.confirm('You have unsaved changes. Are you sure you want to cancel?');
             if (!confirm) return;
         }
-        loadFileContent();
+        loadFileContent(); // Reset content
         setHasChanges(false);
         setIsEditing(false);
     };
@@ -64,6 +69,7 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
     const toggleEdit = () => {
         setIsEditing(!isEditing);
         if (!isEditing) {
+            // Focus textarea when entering edit mode
             setTimeout(() => {
                 textareaRef.current?.focus();
             }, 100);

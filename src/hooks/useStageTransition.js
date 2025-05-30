@@ -13,7 +13,6 @@ export function useStageTransitions(
     const [stageMessageType, setStageMessageType] = useState('');
 
     const handleModify = useCallback((index) => {
-        // Don't allow modify if in Conversation stage
         if (artifactStage === ArtifactStages.Conversation) {
             return;
         }
@@ -36,7 +35,6 @@ export function useStageTransitions(
         setShouldShowStageMessage(true);
     }, [artifactStage, advanceArtifactStage, setGenerationStage]);
 
-    // Handle modify stage messages
     useEffect(() => {
         console.log('Generation stage advanced to:', generationStage);
         if (shouldShowStageMessage && stageMessageType === 'modify' && generationStage === GenerationStages.Modifying) {
@@ -45,7 +43,6 @@ export function useStageTransitions(
         }
     }, [generationStage, shouldShowStageMessage, stageMessageType, sendMessage]);
 
-    // Handle continue stage messages
     useEffect(() => {
         console.log('Artifact stage advanced to:', artifactStage);
         if (shouldShowStageMessage && stageMessageType === 'continue') {

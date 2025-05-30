@@ -3,15 +3,31 @@ import './Main.css';
 import SearchBox from '../SearchBox/SearchBox';
 import Nav from '../Nav/Nav';
 import ChatContainer from '../ChatContainer/ChatContainer';
+import FileEditor from '../FileEditor/FileEditor';
+import UploadedFiles from '../UploadedFiles/uploadedFiles';
+
+// hooks
 import { useStageManager } from '../../hooks/stageManager';
 import { useAutoScroll } from '../../hooks/useAutoScroll';
-import { getCurrentActionDescription, getGreetingText, getBottomInfoText } from '../../hooks/stageHelpers';
 import { useMessageHandler } from '../../hooks/useMessageHandler1';
 import { useStageTransitions } from '../../hooks/useStageTransition';
+import { useFileManager } from '../../hooks/useFileManager';
+
+//Helpers
+import {
+    getCurrentActionDescription,
+    getGreetingText,
+    getBottomInfoText
+} from '../../hooks/stageHelpers';
+
+//Constants
 import { ArtifactStages } from '../../constants/artifactStages';
+
+
 
 const Main = ({ user }) => {
     const [inputValue, setInputValue] = useState('');
+
     const {
         artifactStage,
         generationStage,
@@ -37,20 +53,33 @@ const Main = ({ user }) => {
         sendMessage
     );
 
+    const {
+        uploadedFiles,
+        editingFile,
+        addFile,
+        updateFileContent,
+        deleteFile,
+        startEditingFile,
+        stopEditingFile
+    } = useFileManager();
+
     const mainContainerRef = useAutoScroll(messages);
 
-    const handleSend = (text) => {
+    const handleSend = (file) => {
         setInputValue('');
-        handleSendMessage(text);
+        handleSendMessage(inputValue);
+    };
+
+    const handleFileUpload = (file) => {
+        addFile(file);
     };
 
     const handleContinueWithIndex = (index) => {
         handleContinue(index, setDisabledModifyIndexes);
     };
 
-    // Check if buttons should be disabled (when in Conversation stage)
+    
     const shouldDisableButtons = artifactStage === ArtifactStages.Conversation;
-
     const currentActionDescription = getCurrentActionDescription(artifactStage, generationStage);
     const greetingText = getGreetingText(artifactStage);
     const bottomInfoText = getBottomInfoText(artifactStage, isWaitingResponse, () => currentActionDescription);
@@ -67,6 +96,12 @@ const Main = ({ user }) => {
                         <span>{greetingText}</span>
                     </p>
                 </div>
+
+                <UploadedFiles
+                    files = {uploadedFiles}
+                    onEditFile={startEditingFile}
+                    onDeleteFile={deleteFile}
+                />
                 <ChatContainer
                     messages={messages}
                     onModify={handleModify}
@@ -82,12 +117,21 @@ const Main = ({ user }) => {
                     value={inputValue}
                     onChange={e => setInputValue(e.target.value)}
                     onSend={handleSend}
+                    onFileUpload={handleFileUpload}
                     disabled={isWaitingResponse}
                 />
                 <p className="bottom-info">
                     {bottomInfoText}
                 </p>
             </div>
+            {editingFile && (
+                <FileEditor
+                    file={editingFile}
+                    onSave={updateFileContent}
+                    onClose={stopEditingFile}
+                    onDelete={deleteFile}
+                />
+            )}
         </div>
     );
 };

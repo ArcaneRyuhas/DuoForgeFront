@@ -31,3 +31,52 @@
     align-items: center;
     gap: 15px;
 }
+
+.upload-btn,
+.send-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-btn:hover:not(:disabled),
+.send-btn:hover:not(:disabled) {
+    background-color: rgba(72, 219, 251, 0.1);
+    transform: translateY(-1px);
+}
+
+.upload-btn:disabled,
+.send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.upload-icon,
+.send-icon {
+    width: 20px;
+    height: 20px;
+    transition: opacity 0.2s ease;
+}
+
+.upload-btn:disabled .upload-icon,
+.send-btn:disabled .send-icon {
+    opacity: 0.5;
+}
+
+.upload-btn:focus-visible,
+.send-btn:focus-visible {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.upload-btn:active:not(:disabled),
+.send-btn:active:not(:disabled) {
+    transform: translateY(0);
+    background-color: rgba(72, 219, 251, 0.2);
+}
