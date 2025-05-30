@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import Icon from '@mdi/react';
+import { mdiLeadPencil, mdiDeleteForever } from '@mdi/js';
+import { extractFileContent } from '../../utils/fileExtractors';
 import './FileEditor.css';
 
 const FileEditor = ({ file, onSave, onClose, onDelete }) => {
@@ -17,31 +20,16 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
     const loadFileContent = async () => {
         setIsLoading(true);
         setError(null);
+        const realFile = file.file || file;
         
         try {
-            let text = '';
-            const fileType = file.type ||'';
-            const fileName = file.name || '';
-
-            
-            if (file.type === 'text/plain' || fileName.endsWith('.txt')) {
-                text = await file.text();
-            } else if (file.type === 'application/pdf' || fileName.endsWith('.pdf')) {
-                text = await extractPDFContent(file);
-            } else if (file.type.includes('word') || file.name.endsWith('.docx') || file.name.endsWith('.doc') || fileType.includes('document')) {
-                 text = await extractWordContent(file);
-            } else {
-                try {
-                text = await file.text();
-                } catch (e) {
-                text = 'Unable to extract text content from this file type.';
-            }
-            }
-            
-            return(text);
+            const text = await extractFileContent(realFile);
+            setContent(text);
         } catch (error) {
-            console.error('Error reading file:', err);
-            throw error;
+            console.error('Error reading file:', error);
+            setError(error.message || 'Failed to read file content');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -61,7 +49,7 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
             const confirm = window.confirm('You have unsaved changes. Are you sure you want to cancel?');
             if (!confirm) return;
         }
-        loadFileContent(); // Reset content
+        loadFileContent(); 
         setHasChanges(false);
         setIsEditing(false);
     };
@@ -69,7 +57,6 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
     const toggleEdit = () => {
         setIsEditing(!isEditing);
         if (!isEditing) {
-            // Focus textarea when entering edit mode
             setTimeout(() => {
                 textareaRef.current?.focus();
             }, 100);
@@ -77,12 +64,10 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
     };
 
     const handleKeyDown = (e) => {
-        // Save with Ctrl+S
         if (e.ctrlKey && e.key === 's') {
             e.preventDefault();
             handleSave();
         }
-        // Cancel with Escape
         if (e.key === 'Escape') {
             handleCancel();
         }
@@ -133,7 +118,7 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
                 <div className="file-actions">
                     {!isEditing ? (
                         <button onClick={toggleEdit} className="edit-btn">
-                            ✏️ Edit
+                            <Icon path={mdiLeadPencil} size={0.8} /> 
                         </button>
                     ) : (
                         <>
@@ -154,7 +139,7 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
                         className="delete-btn"
                         title="Delete file"
                     >
-                        🗑️
+                        <Icon path={mdiDeleteForever} size={0.8} />
                     </button>
                     <button onClick={onClose} className="close-btn">×</button>
                 </div>
