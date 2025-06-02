@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { assets } from '../../assets/assets';
 import Icon from '@mdi/react';
-import { mdiLeadPencil, mdiDeleteForever } from '@mdi/js'; 
+import { mdiLeadPencil, mdiDeleteForever, mdiCircleOutline, mdiCheckCircle } from '@mdi/js'; 
 import './SearchBox.css';
 
 
@@ -14,8 +14,11 @@ const SearchBox = ({
     onFileUpload, 
     disabled,
     uploadedFiles = [],
+    selectedFileIds=[],
+    onFileSelect,
     onEditFile,
-    onDeleteFile
+    onDeleteFile,
+    isFileProcessed
  }) => {
     const {
         documentInputRef,
@@ -29,13 +32,13 @@ const SearchBox = ({
     const handleKeyDown = e => {
         if (e.key === 'Enter' && !disabled && value.trim()) {
             e.preventDefault(); 
-            onSend(value.trim());
+            onSend(value.trim(), selectedFileIds);
          }
     };
 
     const handleSendClick = () => {
         if (!disabled && value.trim()) {
-        onSend(value.trim());
+        onSend(value.trim(), selectedFileIds);
         }
     };
 
@@ -45,42 +48,99 @@ const SearchBox = ({
         }
     };
 
+    const handleFileToggle = (fileId) => {
+        if (onFileSelect) {
+            onFileSelect(fileId);
+        }
+    };
+
+    const isFileSelected = (fileId) => {
+        return selectedFileIds.includes(fileId);
+    };
+
+    const formatFileSize = (bytes) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    };
+
+    const getFileIcon = (fileType) => {
+        if (fileType === 'audio') return '🎵';
+        if (fileType === 'document') return '📄';
+        return '📎';
+    };
+
     return (
         <div className="search-box">
-            {/* Uploaded Files Display - Shows above the input */}
             {uploadedFiles.length > 0 && (
                 <div className="uploaded-files-display">
-                    <h4>Uploaded Files:</h4>
+                    <div className="files-header">
+                        <h4>Available Files:</h4>
+                        {selectedFileIds.length > 0 && (
+                            <span className="selected-count">
+                                {selectedFileIds.length} selected
+                            </span>
+                        )}
+                    </div>
                     <div className="files-list">
-                        {uploadedFiles.map(file => (
-                            <div key={file.id} className="file-item">
-                                <div className="file-main-info">
-                                    <span className="file-name">{file.name}</span>
-                                    <span className="file-type">({file.type})</span>
-                                    <span className="file-size">
-                                        {(file.size / 1024).toFixed(1)} KB
-                                    </span>
+                        {uploadedFiles.map(file => {
+                            const selected = isFileSelected(file.id);
+                            const processed = isFileProcessed ? isFileProcessed(file.id) : true;
+                            
+                            return (
+                                <div 
+                                    key={file.id} 
+                                    className={`file-item ${selected ? 'selected' : ''} ${!processed ? 'processing' : ''}`}
+                                >
+                                    <div className="file-selection-area" onClick={() => handleFileToggle(file.id)}>
+                                        <button
+                                            type="button"
+                                            className="file-select-btn"
+                                            disabled={disabled || !processed}
+                                            title={selected ? "Remove from message" : "Include in message"}
+                                        >
+                                            <Icon 
+                                                path={selected ? mdiCheckCircle : mdiCircleOutline} 
+                                                size={0.9}
+                                                color={selected ? '#007bff' : '#666'}
+                                            />
+                                        </button>
+                                        <div className="file-main-info">
+                                            <div className="file-name-row">
+                                                <span className="file-icon">{getFileIcon(file.type)}</span>
+                                                <span className="file-name" title={file.name}>{file.name}</span>
+                                            </div>
+                                            <div className="file-meta">
+                                                <span className="file-type">{file.type}</span>
+                                                <span className="file-size">{formatFileSize(file.size)}</span>
+                                                {!processed && <span className="processing-indicator">Processing...</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="file-actions">
+                                        <button
+                                            onClick={() => onEditFile(file)}
+                                            className="edit-file-btn"
+                                            title="Edit file content"
+                                            disabled={disabled || !processed}
+                                        >
+                                            <Icon path={mdiLeadPencil} size={0.8} />
+                                        </button>
+                                        <button
+                                            onClick={() => onDeleteFile(file.id)}
+                                            className="delete-file-btn"
+                                            title="Delete file"
+                                            disabled={disabled}
+                                        >
+                                            <Icon path={mdiDeleteForever} size={0.8} />
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="file-actions">
-                                    <button
-                                        onClick={() => onEditFile(file)}
-                                        className="edit-file-btn"
-                                        title="Edit file content"
-                                        disabled={disabled}
-                                    >
-                                        <Icon path={mdiLeadPencil} size={0.8} />
-                                    </button>
-                                    <button
-                                        onClick={() => onDeleteFile(file.id)}
-                                        className="delete-file-btn"
-                                        title="Delete file"
-                                        disabled={disabled}
-                                    >
-                                        <Icon path={mdiDeleteForever} size={0.8} />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -149,6 +209,7 @@ const SearchBox = ({
                         className="send-btn"
                         title="Send message"
                         aria-label="Send message"
+                        disabled={disabled || (!value.trim() && selectedFileIds.length === 0)}
                     >
                         <img
                             src={assets.send_icon}
@@ -174,15 +235,21 @@ SearchBox.propTypes = {
         type: PropTypes.string.isRequired,
         size: PropTypes.number.isRequired
     })),
+    selectedFileIds: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number])),
+    onFileSelect: PropTypes.func,
     onEditFile: PropTypes.func,
-    onDeleteFile: PropTypes.func
+    onDeleteFile: PropTypes.func,
+    isFileProcessed: PropTypes.func
 };
 
 SearchBox.defaultProps = {
     disabled: false,
     uploadedFiles: [],
+    selectedFileIds: [],
+    onFileSelect: () => {},
     onEditFile: () => {},
-    onDeleteFile: () => {}
+    onDeleteFile: () => {},
+    isFileProcessed: () => true
 };
 
 export default SearchBox;

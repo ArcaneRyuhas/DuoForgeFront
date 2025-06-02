@@ -3,8 +3,7 @@ import { shouldUseMarkdownForResponse } from '../components/RenderUtils/markDown
 import { ArtifactStages } from '../constants/artifactStages';
 import { executeStageBasedAction } from '../api/connectionApi';
 
-
-export function useMessageHandler(artifactStage, generationStage, user) {
+export function useMessageHandler(artifactStage, generationStage, user, getFileById, isFileProcessed) {
     const [messages, setMessages] = useState([]);
     const [isWaitingResponse, setIsWaitingResponse] = useState(false);
     const [disabledModifyIndexes, setDisabledModifyIndexes] = useState([]);
@@ -16,13 +15,6 @@ export function useMessageHandler(artifactStage, generationStage, user) {
             text,
             sender
         );
-
-        console.log('Sending message:', { 
-            sender, 
-            useMarkdown, 
-            artifactStage,
-            generationStage,
-            textPreview: text?.substring(0, 50) });
         
         const messageObject = {
             sender,
@@ -53,30 +45,129 @@ export function useMessageHandler(artifactStage, generationStage, user) {
         });
     }, [artifactStage]);
 
-    const handleSendMessage = useCallback(async (text, files =[]) => {
-        if (!text.trim()) return;
+    const prepareFileContent = useCallback((fileIds) => {
+        if (!fileIds || fileIds.length === 0) return '';
+
+        const fileContents = fileIds.map(fileId => {
+            const file = getFileById(fileId);
+            if (!file) {
+                console.warn(`File with ID ${fileId} not found`);
+                return null;
+            }
+            const content = file.editedContent || file.originalContent;
+            if (!content) {
+                console.warn(`No content available for file: ${file.name}`);
+                return null;
+            }
+            if (content.includes('Error reading file') || content.includes('Failed to extract')) {
+                console.warn(`Skipping file with extraction error: ${file.name}`);
+                return null;
+            }
+            return {
+                fileName: file.name,
+                fileType: file.type,
+                fileSize: file.size,
+                content: content
+            };
+        }).filter(Boolean);
+
+        if (fileContents.length === 0) return '';
+
+        const formattedContent = fileContents.map(file => {
+            const header = `--- FILE: ${file.fileName} (${file.fileType}, ${(file.fileSize / 1024).toFixed(1)}KB) ---`;
+            const footer = `--- END OF ${file.fileName} ---`;
+            return `${header}\n${file.content}\n${footer}`;
+        }).join('\n\n');
+
+        return `\n\nATTACHED FILES:\n${formattedContent}`;
+    }, [getFileById]);
+
+    const handleSendMessage = useCallback(async (text, fileIds = []) => {
+        if (!text.trim() && (!fileIds || fileIds.length === 0)) return;
+        if (fileIds.length > 0 && isFileProcessed) {
+            const unprocessedFiles = fileIds.filter(id => !isFileProcessed(id));
+            if (unprocessedFiles.length > 0) {
+                sendMessage("Please wait for all files to finish processing before sending.", 'bot');
+                return;
+            }
+        }
 
         disableButtons();
         setIsWaitingResponse(true);
+
+        let completeMessage = text.trim();
+        const fileContent = prepareFileContent(fileIds);
+        
+        if (fileContent) {
+            completeMessage += fileContent;
+        }
+
         sendMessage(text, 'user');
 
-        if (files && files.length > 0 ) {
-            console.log('Sending files with message:', files.map(f => ({ name: f.name, size: f.size })));
+        if (fileIds && fileIds.length > 0) {
+            const fileNames = fileIds.map(id => {
+                const file = getFileById(id);
+                return file ? file.name : `File ${id}`;
+            }).join(', ');
+            sendMessage(`Processing your message with attached files: ${fileNames}...`, 'bot');
         }
 
         try {
             const userId = user?.profile?.sub;
-            const responseText = await executeStageBasedAction(artifactStage, generationStage, userId, text, files);
-            sendMessage(responseText, 'bot');
+
+            const selectedFiles = fileIds.map(fileId => {
+            const file = getFileById(fileId); 
+            if (!file) {
+                console.warn(`File with ID ${fileId} not found`);
+                return null;
+            }
+            return {
+                id: file.id,
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                content: file.editedContent || file.originalContent,
+                originalContent: file.originalContent,
+                editedContent: file.editedContent
+            };
+        }).filter(Boolean);
+
+            const response = await executeStageBasedAction(
+                artifactStage, 
+                generationStage, 
+                userId, 
+                completeMessage, 
+                selectedFiles
+            );
+
+            let parsedResponse;
+            try {
+                parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
+            } catch (parseError) {
+                sendMessage(response, 'bot');
+                return;
+            }
+
+            if (parsedResponse && typeof parsedResponse.is_valid === 'boolean') {
+                if (!parsedResponse.is_valid) {
+                    const validationMessage = parsedResponse.jira_stories || "Please rewrite your requirements to make them more robust.";
+                    sendMessage(validationMessage, 'bot');
+                } else {
+                    sendMessage(parsedResponse.jira_stories, 'bot');
+                }
+            } else {
+                const responseText = parsedResponse.jira_stories || response;
+                sendMessage(responseText, 'bot');
+            }
         } catch (error) {
-            console.error('Error in handleSendMessage:', error);
+            console.error('Error processing request:', error);
             sendMessage("Sorry, there was an error processing your request.", 'bot');
         } finally {
             setIsWaitingResponse(false);
         }
-    }, [artifactStage, generationStage, user, disableButtons, sendMessage]);
-
-    return {
+        }, [artifactStage, generationStage, user, disableButtons, sendMessage, prepareFileContent, getFileById, isFileProcessed]);
+    
+        return {
         messages,
         isWaitingResponse,
         disabledModifyIndexes,

@@ -42,7 +42,6 @@ const ChatContainer = ({
                         borderRadius: '0.5rem',
                         minHeight: '50px'
                     }}>
-                        {/* Render text based on stored or calculated markdown decision */}
                         <div>
                             {useMarkdown ? (
                                 <MarkdownRenderer content={m.text} />
@@ -51,7 +50,6 @@ const ChatContainer = ({
                             )}
                         </div>
                         
-                        {/* Only show buttons for the last bot message and if it's not disabled */}
                         {m.sender === 'bot' &&
                          i === lastBotMessageIndex && 
                          !disabledModifyIndexes.includes(i) &&

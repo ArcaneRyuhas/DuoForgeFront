@@ -6,7 +6,6 @@ export const useFileManager = () => {
     const[editingFile, setEditingFile] = useState(null);
 
     const addFile = useCallback(async(file, type) => {
-        console.log("File uploaded:", file.name, "Type:", type);
         const newFile = {
             id: Date.now(),
             file,
@@ -33,20 +32,17 @@ export const useFileManager = () => {
     }, []);
 
     const processDocumentFile = useCallback(async (file, fileId) => {
-        console.log('Processing document:', file.name);
         try {
-            const content = extractFileContent(file);
+            const content = await extractFileContent(file);
 
             setUploadedFiles(prev => {
                 const updated= prev.map(f =>
                     f.id === fileId
                         ? { ...f, originalContent: content, editedContent: content }
                         : f
-                )
-                console.log('Updated files state:', updated); 
+                ) 
                 return updated;
             });
-            console.log('Document processed successfully, content length:', content.length?.length || 0);
         } catch (error) {
             console.error('Error reading document file:', error);
             const errorMessage = error.message || 'Error reading file';
@@ -66,24 +62,19 @@ export const useFileManager = () => {
     }, []);
 
     const updateFileContent = useCallback((fileId, content) => {
-        console.log('Updating file content for ID:', fileId, 'New content length:', content?.length || 0);
-
         setUploadedFiles(prev=> {
             const updated = prev.map(file => {
                 if (file.id === fileId){
-                    console.log('Found matching file, updating content');
                     return {...file, editedContent: content};
                 }
                 return file;
                 });
-        console.log('Files after update:', updated);
         return updated;
     }, []);
 
     setEditingFile(prev => {
             if (prev && prev.id === fileId) {
                 const updatedEditingFile = { ...prev, editedContent: content };
-                console.log('Updated editing file:', updatedEditingFile);
                 return updatedEditingFile;
             }
             return prev;
@@ -102,19 +93,30 @@ export const useFileManager = () => {
 
     const getFileById = useCallback((fileId) => {
         const file= uploadedFiles.find(f => f.id === fileId);
-        console.log('Getting file by ID:', fileId, 'Found:', file);
         return file;
     }, [uploadedFiles]);
 
     const startEditingFile = useCallback((file) => {
-        console.log('Starting to edit file:', file);
         setEditingFile(file);
     }, []);
 
     const stopEditingFile = useCallback(() => {
-        console.log('Stopping file editing');
         setEditingFile(null);
     }, []);
+
+    const getFileContent = useCallback((fileId) =>{
+        const file = getFileById(fileId);
+        return file ? (file.editedContent || file.originalContent): null;
+    }, [getFileById]);
+
+    const getProcessedFiles = useCallback(()=> {
+        return uploadedFiles.filter(file => file.originalContent !== null);
+    }, [uploadedFiles]);
+
+    const isFileProcessed = useCallback((fileId)=> {
+        const file = getFileById(fileId);
+        return file && file.originalContent !== null;
+    }, [getFileById])
 
     return {
         uploadedFiles,
@@ -124,7 +126,10 @@ export const useFileManager = () => {
         deleteFile,
         startEditingFile,
         stopEditingFile,
-        getFileById
+        getFileById,
+        getFileContent,
+        getProcessedFiles,
+        isFileProcessed
     };
 };
 

@@ -18,32 +18,40 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
     }, [file]);
 
     const loadFileContent = async () => {
-        setIsLoading(true);
-        setError(null);
+    setIsLoading(true);
+    setError(null);
 
-        try {
-            let text ='';
-
-            if (file.editedContent !== null && file.editedContent !== undefined) {
-                text = file.editedContent;
-                console.log('Using edited content:', text.length, 'characters');
-            } else if (file.originalContent !== null && file.originalContent !== undefined) {
-                text = file.originalContent;
-                console.log('Using original content:', text.length, 'characters');
-            } else {
-                const realFile = file.file || file;
-                text = await extractFileContent(realFile);
-                console.log('Extracted content from file:', text.length, 'characters');
-            }
-            
-            setContent(text);
-        } catch (error) {
-            console.error('Error reading file:', error);
-            setError(error.message || 'Failed to read file content');
-        } finally {
-            setIsLoading(false);
+    try {
+        let loadedText = ''; 
+        if (file.editedContent) { 
+            loadedText = file.editedContent instanceof Promise 
+                         ? await file.editedContent 
+                         : file.editedContent;
+            console.log('Using edited content:', String(loadedText || '').length, 'characters');
         }
-    };
+        if (!loadedText && file.originalContent) { 
+            loadedText = file.originalContent instanceof Promise
+                         ? await file.originalContent
+                         : file.originalContent;
+            console.log('Using original content:', String(loadedText || '').length, 'characters');
+        }
+
+        if (!loadedText) {
+            const realFile = file.file || file;
+            loadedText = await extractFileContent(realFile);
+            console.log('Extracted content from file:', String(loadedText || '').length, 'characters');
+        }
+        
+        setContent(String(loadedText || '')); 
+
+    } catch (error) {
+        console.error('Error reading file:', error);
+        setError(error.message || 'Failed to read file content');
+        setContent(''); 
+    } finally {
+        setIsLoading(false);
+    }
+};
 
     const handleContentChange = (e) => {
         setContent(e.target.value);
@@ -62,7 +70,9 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
             const confirm = window.confirm('You have unsaved changes. Are you sure you want to cancel?');
             if (!confirm) return;
         }
-        const savedContent = file.editedContent !== null ? file.editedContent : file.originalContent || '';
+        const savedContent = file.editedContent !== null && file.editedContent !== undefined
+        ? String(file.editedContent) 
+        : String(file.originalContent || '');
         setContent(savedContent);
         setHasChanges(false);
         setIsEditing(false);
@@ -172,14 +182,14 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
                     />
                 ) : (
                     <div className="content-viewer">
-                        <pre>{content}</pre>
+                        <pre>{typeof content == 'string' ? content: ''}</pre>
                     </div>
                 )}
                 
                 <div className="editor-stats">
-                    <span>Characters: {content.length}</span>
-                    <span>Words: {content.split(/\s+/).filter(word => word.length > 0).length}</span>
-                    <span>Lines: {content.split('\n').length}</span>
+                    <span>Characters: {typeof content == 'string' ? content.length: 0}</span>
+                    <span>Words: {typeof content == 'string' ? content.split(/\s+/).filter(word => word.length > 0).length: 0}</span>
+                    <span>Lines: {typeof content == 'string' ? content.split('\n').length: 0}</span>
                     {isEditing && (
                         <span className="keyboard-shortcuts">
                             Ctrl+S to save • Esc to cancel

@@ -21,6 +21,29 @@
     color: #333;
 }
 
+.files-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.files-header h4 {
+    margin: 0;
+    color: #495057;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.selected-count {
+    font-size: 0.875rem;
+    color: #007bff;
+    background: #e3f2fd;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-weight: 500;
+}
+
 .files-list {
     display: flex;
     flex-direction: column;
@@ -38,6 +61,46 @@
     font-size: 13px;
 }
 
+.file-item:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+}
+
+.file-item.selected {
+    border-color: #007bff;
+    background: #f8f9ff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+}
+
+.file-item.processing {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.file-item.processing:hover {
+    border-color: #e9ecef;
+    box-shadow: none;
+}
+
+.file-select-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.file-select-btn:hover:not(:disabled) {
+    transform: scale(1.1);
+}
+
+.file-select-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
 .file-main-info {
     display: flex;
     align-items: center;
@@ -46,13 +109,18 @@
     min-width: 0; 
 }
 
-.file-name {
+.file-name-row {
     font-weight: 500;
     color: #333;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 150px;
+}
+
+.file-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
 }
 
 .file-type {
@@ -65,9 +133,20 @@
     font-size: 12px;
 }
 
+.file-meta {
+    color: #888;
+    font-size: 12px;
+}
+
 .file-actions {
     display: flex;
     gap: 6px;
+}
+
+.processing-indicator {
+    color: #ffc107;
+    font-weight: 500;
+    font-style: italic;
 }
 
 .search-box img {
@@ -151,4 +230,29 @@
     padding: 8px;
     font-size: 18px;
     color: #5d5e5f; 
+}
+
+.edit-file-btn,
+.delete-file-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.375rem;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.edit-file-btn {
+    color: #007bff;
+}
+
+.edit-file-btn:hover:not(:disabled) {
+    background: #e3f2fd;
+}
+
+.delete-file-btn {
+    color: #dc3545;
 }

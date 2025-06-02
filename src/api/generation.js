@@ -10,7 +10,7 @@ import { apiPost } from './client';
 export async function generateJiraStories(userId, requirement, files= []) {
     const payload = {
         user_id: userId, 
-        reuirement: requirement,
+        requirement: requirement,
     };
     if (files && files.length > 0) {
         payload.files = files.map(file => ({
@@ -20,7 +20,7 @@ export async function generateJiraStories(userId, requirement, files= []) {
             size: file.size
         }));
     }
-    return apiPost('/documentation/generate');
+    return apiPost('/documentation/generate', payload);
 }
 
 

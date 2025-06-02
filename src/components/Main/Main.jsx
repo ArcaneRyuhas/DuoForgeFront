@@ -26,6 +26,7 @@ import { ArtifactStages } from '../../constants/artifactStages';
 
 const Main = ({ user }) => {
     const [inputValue, setInputValue] = useState('');
+    const[selectedFileIds, setSelectedFileIds] = useState([]);
 
     const {
         artifactStage,
@@ -35,6 +36,20 @@ const Main = ({ user }) => {
         reset,
     } = useStageManager();
 
+    const fileManager = useFileManager();
+
+    const {
+        uploadedFiles,
+        editingFile,
+        addFile,
+        updateFileContent,
+        deleteFile,
+        startEditingFile,
+        stopEditingFile,
+        getFileById,
+        isFileProcessed
+    } = fileManager;
+
     const {
         messages,
         isWaitingResponse,
@@ -42,7 +57,7 @@ const Main = ({ user }) => {
         setDisabledModifyIndexes,
         sendMessage,
         handleSendMessage
-    } = useMessageHandler(artifactStage, generationStage, user);
+    } = useMessageHandler(artifactStage, generationStage, user, getFileById, isFileProcessed);
 
     const { handleModify, handleContinue } = useStageTransitions(
         artifactStage,
@@ -52,21 +67,12 @@ const Main = ({ user }) => {
         sendMessage
     );
 
-    const {
-        uploadedFiles,
-        editingFile,
-        addFile,
-        updateFileContent,
-        deleteFile,
-        startEditingFile,
-        stopEditingFile
-    } = useFileManager();
-
     const mainContainerRef = useAutoScroll(messages);
 
-    const handleSend = (message) => {
+    const handleSend = (message, fileIds=[]) => {
         setInputValue('');
-        handleSendMessage(message, uploadedFiles);
+        handleSendMessage(message, fileIds);
+        setSelectedFileIds([]);
     };
 
     const handleFileUpload = (file) => {
@@ -75,9 +81,18 @@ const Main = ({ user }) => {
             type = 'audio';
         } else if (file.type && (file.type.includes('pdf') || file.type.includes('word') || file.type.includes('text'))) {
             type = 'document'
-
         }
         addFile(file, type);
+    };
+
+    const handleFileSelect = (fileId) => {
+        setSelectedFileIds(prev => {
+            if (prev.includes(fileId)) {
+                return prev.filter(id => id !== fileId);
+            } else {
+                return [...prev, fileId];
+            }
+        });
     };
 
     const handleContinueWithIndex = (index) => {
@@ -121,8 +136,11 @@ const Main = ({ user }) => {
                     onFileUpload={handleFileUpload}
                     disabled={isWaitingResponse}
                     uploadedFiles={uploadedFiles}
+                    selectedFileIds={selectedFileIds}
+                    onFileSelect= {handleFileSelect}
                     onEditFile={startEditingFile}
                     onDeleteFile={deleteFile}
+                    isFileProcessed={isFileProcessed}
                 />
                 <p className="bottom-info">
                     {bottomInfoText}
