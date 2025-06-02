@@ -5,14 +5,14 @@ import { Conversation } from '../api/conversation';
 import { modifyJiraStories, modifyMermaidDiagrams, modifyCode } from '../api/modify';
 import { extractProgrammingLanguage } from '../components/RenderUtils/contentAnalyzers';
 
-export async function executeStageBasedAction(artifactStage, generationStage, userId, inputText) {
+export async function executeStageBasedAction(artifactStage, generationStage, userId, inputText, files=[]) {
     try {
         let response;
         
         console.log(`Current stage: ${artifactStage} - ${generationStage}`);
+        console.log(`Files attached: ${files?.length || 0}`);
         
         if (artifactStage === ArtifactStages.Conversation) {
-            // In conversation stage, just call the conversation API directly
             response = await Conversation(userId, inputText);
         } else if (artifactStage === ArtifactStages.Documentation) {
             if (generationStage === GenerationStages.Creating) {

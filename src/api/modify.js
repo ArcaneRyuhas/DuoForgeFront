@@ -7,7 +7,7 @@ import { apiPost } from './client';
  * @returns {Promise<Object>} The response from the backend.
  */
 export async function modifyJiraStories(userId, modificationJiraPrompt) {
-    return apiPost('/modify_jira_stories/', {
+    return apiPost('/documentation/modify', {
         user_id: userId,
         modification_prompt: modificationJiraPrompt,
     });
@@ -20,7 +20,7 @@ export async function modifyJiraStories(userId, modificationJiraPrompt) {
  * @returns {Promise<Object>} The response from the backend.
  */
 export async function modifyMermaidDiagrams(userId, modificationDiagramPrompt) {
-    return apiPost('/modify_diagram', {
+    return apiPost('/diagram/modify', {
         user_id: userId,
         modification_prompt: modificationDiagramPrompt,
     });
@@ -33,7 +33,7 @@ export async function modifyMermaidDiagrams(userId, modificationDiagramPrompt) {
  * @returns {Promise<Object>} The response from the backend.
  */
 export async function modifyCode(userId, modificationCodePrompt) {
-    return apiPost('/modify_code', {
+    return apiPost('/code/modify', {
         user_id: userId,
         modification_prompt: modificationCodePrompt,
     });

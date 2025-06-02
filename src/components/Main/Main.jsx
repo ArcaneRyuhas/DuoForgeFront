@@ -4,7 +4,6 @@ import SearchBox from '../SearchBox/SearchBox';
 import Nav from '../Nav/Nav';
 import ChatContainer from '../ChatContainer/ChatContainer';
 import FileEditor from '../FileEditor/FileEditor';
-import UploadedFiles from '../UploadedFiles/uploadedFiles';
 
 // hooks
 import { useStageManager } from '../../hooks/stageManager';
@@ -65,13 +64,20 @@ const Main = ({ user }) => {
 
     const mainContainerRef = useAutoScroll(messages);
 
-    const handleSend = (file) => {
+    const handleSend = (message) => {
         setInputValue('');
-        handleSendMessage(inputValue);
+        handleSendMessage(message, uploadedFiles);
     };
 
     const handleFileUpload = (file) => {
-        addFile(file);
+        let type = 'document';
+        if (file.type && file.type.startsWith('audio')) {
+            type = 'audio';
+        } else if (file.type && (file.type.includes('pdf') || file.type.includes('word') || file.type.includes('text'))) {
+            type = 'document'
+
+        }
+        addFile(file, type);
     };
 
     const handleContinueWithIndex = (index) => {
@@ -97,11 +103,6 @@ const Main = ({ user }) => {
                     </p>
                 </div>
 
-                <UploadedFiles
-                    files = {uploadedFiles}
-                    onEditFile={startEditingFile}
-                    onDeleteFile={deleteFile}
-                />
                 <ChatContainer
                     messages={messages}
                     onModify={handleModify}
@@ -119,6 +120,9 @@ const Main = ({ user }) => {
                     onSend={handleSend}
                     onFileUpload={handleFileUpload}
                     disabled={isWaitingResponse}
+                    uploadedFiles={uploadedFiles}
+                    onEditFile={startEditingFile}
+                    onDeleteFile={deleteFile}
                 />
                 <p className="bottom-info">
                     {bottomInfoText}

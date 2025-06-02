@@ -23,7 +23,6 @@ export function useStageTransitions(
     }, [artifactStage, setGenerationStage]);
 
     const handleContinue = useCallback((index, setDisabledModifyIndexes) => {
-        // Don't allow continue if in Conversation stage
         if (artifactStage === ArtifactStages.Conversation) {
             return;
         }

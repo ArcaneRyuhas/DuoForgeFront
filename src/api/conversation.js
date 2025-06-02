@@ -6,7 +6,7 @@ import { apiPost } from './client';
  */
 
 export async function Conversation(userId, inputText) {
-    return apiPost('/conversation', {
+    return apiPost('/conversation/', {
         user_id: userId,
         content: inputText,
     }); 

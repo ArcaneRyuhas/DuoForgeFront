@@ -53,18 +53,23 @@ export function useMessageHandler(artifactStage, generationStage, user) {
         });
     }, [artifactStage]);
 
-    const handleSendMessage = useCallback(async (text) => {
+    const handleSendMessage = useCallback(async (text, files =[]) => {
         if (!text.trim()) return;
 
         disableButtons();
         setIsWaitingResponse(true);
         sendMessage(text, 'user');
 
+        if (files && files.length > 0 ) {
+            console.log('Sending files with message:', files.map(f => ({ name: f.name, size: f.size })));
+        }
+
         try {
             const userId = user?.profile?.sub;
-            const responseText = await executeStageBasedAction(artifactStage, generationStage, userId, text);
+            const responseText = await executeStageBasedAction(artifactStage, generationStage, userId, text, files);
             sendMessage(responseText, 'bot');
         } catch (error) {
+            console.error('Error in handleSendMessage:', error);
             sendMessage("Sorry, there was an error processing your request.", 'bot');
         } finally {
             setIsWaitingResponse(false);
