@@ -7,6 +7,7 @@ const ChatContainer = ({
     messages, 
     onModify, 
     onContinue, 
+    onUploadToJira, 
     disabledModifyIndexes, 
     shouldDisableButtons,
     artifactStage,
@@ -112,6 +113,20 @@ const ChatContainer = ({
                             <div className="chat-actions" style={{ marginTop: '10px' }}>
                                 <button onClick={() => onModify && onModify(i)}>Modify</button>
                                 <button onClick={() => onContinue && onContinue(i)}>Continue</button>
+                            </div>
+                        )}
+                        {m.sender === 'bot' &&
+                         i === lastBotMessageIndex &&
+                         !disabledModifyIndexes.includes(i) &&
+                         !shouldDisableButtons &&
+                         !isWaitingResponse &&
+                         artifactStage === 'Documentation' && (
+                            <div className="chat-actions" style={{ marginTop: '10px' }}>
+                                <button onClick={() => {
+                                    if (onUploadToJira) onUploadToJira(i);
+                                }}>
+                                    Upload to Jira
+                                </button>
                             </div>
                         )}
                     </div>
