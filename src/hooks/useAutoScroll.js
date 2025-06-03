@@ -9,6 +9,7 @@ export function useAutoScroll(messages) {
             if (mainContainerRef.current) {
                 mainContainerRef.current.scrollTo({
                     top: mainContainerRef.current.scrollHeight,
+                    left: mainContainerRef.current.scrollLeft, 
                     behavior: 'smooth'
                 });
             }
