@@ -44,6 +44,7 @@ const Main = ({ user }) => {
         addFile,
         updateFileContent,
         deleteFile,
+        removeFiles,
         startEditingFile,
         stopEditingFile,
         getFileById,
@@ -69,10 +70,23 @@ const Main = ({ user }) => {
 
     const mainContainerRef = useAutoScroll(messages);
 
-    const handleSend = (message, fileIds=[]) => {
+    const handleSend = async (message, fileIds=[]) => {
+        const selectedFiles = fileIds.map(fileId => {
+        const file = getFileById(fileId);
+        console.log(`File ${fileId}:`, file);
+        return file;
+    }).filter(Boolean);
+    
         setInputValue('');
-        handleSendMessage(message, fileIds);
         setSelectedFileIds([]);
+
+        await handleSendMessage(message, fileIds);
+
+        if (fileIds.length > 0){
+            fileIds.forEach(fileId => {
+                removeFiles(fileId);
+            });
+        }
     };
 
     const handleFileUpload = (file) => {
@@ -126,6 +140,7 @@ const Main = ({ user }) => {
                     shouldDisableButtons={shouldDisableButtons}
                     artifactStage={artifactStage}
                     generationStage={generationStage}
+                    isWaitingResponse={isWaitingResponse}
                 />
             </div>
             <div className="main-bottom">

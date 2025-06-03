@@ -65,7 +65,7 @@
     color: #fff;
 }
 
-/* Markdown renderer overrides for chat bubbles */
+
 .chat-bubble.bot .markdown-renderer {
     color: inherit;
 }
@@ -140,7 +140,7 @@
     font-style: italic;
 }
 
-/* Enhanced styles for better code and diagram rendering */
+
 .chat-bubble.bot .markdown-mermaid {
     background-color: #ffffff;
     border: 1px solid #dee2e6;
@@ -168,6 +168,52 @@
 .chat-bubble.bot .markdown-table th {
     background-color: #e9ecef;
     font-weight: bold;
+}
+
+.message-files {
+    margin-bottom: 8px;
+}
+
+.file-preview {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 4px 0;
+    display: flex;
+    align-items: center;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease;
+}
+
+.file-preview:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.file-preview .file-icon {
+    margin-right: 8px;
+    font-size: 1.1em;
+}
+
+.file-preview .file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-preview .file-name {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+}
+
+.file-preview .file-meta {
+    font-size: 0.8em;
+    opacity: 0.8;
+    display: flex;
+    gap: 8px;
+    margin-top: 2px;
 }
 
 /* Mobile responsiveness */

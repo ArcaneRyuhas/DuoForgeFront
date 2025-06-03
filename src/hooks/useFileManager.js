@@ -31,6 +31,16 @@ export const useFileManager = () => {
 
     }, []);
 
+    const removeFiles = useCallback((fileIds) => {
+        const ids = Array.isArray(fileIds) ? fileIds: [fileIds];
+        setUploadedFiles(prevFiles => 
+            prevFiles.filter(file => !ids.includes(file.id))
+        );
+    if (editingFile && ids.includes(editingFile.id)){
+        setEditingFile(null);
+    }
+}, [editingFile]);
+
     const processDocumentFile = useCallback(async (file, fileId) => {
         try {
             const content = await extractFileContent(file);
@@ -124,12 +134,13 @@ export const useFileManager = () => {
         addFile,
         updateFileContent,
         deleteFile,
+        removeFiles,
         startEditingFile,
         stopEditingFile,
         getFileById,
         getFileContent,
         getProcessedFiles,
-        isFileProcessed
+        isFileProcessed, 
     };
 };
 

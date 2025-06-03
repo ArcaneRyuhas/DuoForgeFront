@@ -8,7 +8,7 @@ export function useMessageHandler(artifactStage, generationStage, user, getFileB
     const [isWaitingResponse, setIsWaitingResponse] = useState(false);
     const [disabledModifyIndexes, setDisabledModifyIndexes] = useState([]);
 
-    const sendMessage = useCallback((text, sender) => {
+    const sendMessage = useCallback((text, sender, files =[]) => {
         const useMarkdown = shouldUseMarkdownForResponse(
             artifactStage,
             generationStage,
@@ -24,7 +24,8 @@ export function useMessageHandler(artifactStage, generationStage, user, getFileB
             generationStage: generationStage,
             timestamp: Date.now(),
             isMarkdown: useMarkdown,
-            forceCodeRendering: artifactStage == ArtifactStages.Code && sender == 'bot'
+            forceCodeRendering: artifactStage == ArtifactStages.Code && sender == 'bot', 
+            files: files || []
         };
 
         setMessages(prevMessages => [...prevMessages, messageObject]);
@@ -101,21 +102,33 @@ export function useMessageHandler(artifactStage, generationStage, user, getFileB
         if (fileContent) {
             completeMessage += fileContent;
         }
+        const selectedFiles = fileIds.map(fileId => {
+            const file = getFileById(fileId);
+            if (!file) {
+                return null;
+            }
+            return {
+                id: file.id,
+                name: file.name,
+                type: file.type,
+                size: file.size
+            };
+        }).filter(Boolean);
 
-        sendMessage(text, 'user');
+        sendMessage(text, 'user', selectedFiles);
 
         if (fileIds && fileIds.length > 0) {
             const fileNames = fileIds.map(id => {
                 const file = getFileById(id);
                 return file ? file.name : `File ${id}`;
             }).join(', ');
-            sendMessage(`Processing your message with attached files: ${fileNames}...`, 'bot');
+            sendMessage(`Processing your request with attached files: ${fileNames}...`, 'bot');
         }
 
         try {
             const userId = user?.profile?.sub;
 
-            const selectedFiles = fileIds.map(fileId => {
+            const selectedFilesForAPI = fileIds.map(fileId => {
             const file = getFileById(fileId); 
             if (!file) {
                 console.warn(`File with ID ${fileId} not found`);
@@ -137,7 +150,7 @@ export function useMessageHandler(artifactStage, generationStage, user, getFileB
                 generationStage, 
                 userId, 
                 completeMessage, 
-                selectedFiles
+                selectedFilesForAPI
             );
 
             let parsedResponse;

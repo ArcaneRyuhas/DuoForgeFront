@@ -30,14 +30,14 @@ const SearchBox = ({
     } = useFileUpload(onFileUpload);
 
     const handleKeyDown = e => {
-        if (e.key === 'Enter' && !disabled && value.trim()) {
+        if (e.key === 'Enter' && !disabled && (value.trim() || selectedFileIds.length>0)) {
             e.preventDefault(); 
             onSend(value.trim(), selectedFileIds);
          }
     };
 
     const handleSendClick = () => {
-        if (!disabled && value.trim()) {
+        if (!disabled && (value.trim() || selectedFileIds.length > 0)) {
         onSend(value.trim(), selectedFileIds);
         }
     };
