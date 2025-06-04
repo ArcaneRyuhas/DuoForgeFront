@@ -1,7 +1,69 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import mermaid from 'mermaid';
 
 const MarkdownRenderer = ({ content }) => {
+    const containerRef = useRef(null);
+    const diagramCounter = useRef(0);
+
+    useEffect (() => {
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'default',
+            securityLevel: 'loose',
+            fontFamily: 'Arial, sans-serif', 
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            }
+        });
+    }, []);
+
     if (!content) return null;
+
+    const isMermaidDiagram = (text) => {
+        const mermaidKeywords = [
+            'graph', 'flowchart', 'sequenceDiagram', 'classDiagram',
+            'stateDiagram', 'erDiagram', 'gantt', 'pie', 'journey',
+            'gitgraph', 'mindmap', 'timeline'
+        ];
+         return mermaidKeywords.some(keyword => text.trim().startsWith(keyword));
+    };
+
+    const processMermaidDiagrams = (text) => {
+        if (isMermaidDiagram(text)){
+            diagramCounter.current++;
+            const diagramId = `mermaid-${Date.now()}-${diagramCounter.current}`;
+            return{
+                processedContent: `<div class="mermaid-diagram" id="${diagramId}"></div>`,
+                diagrams: [{
+                    id: diagramId,
+                    content: text.trim()
+                }]
+            };
+        }
+        const mermaidRegex = /```mermaid\n([\s\S]*?)\n```/g;
+        let match;
+        const diagrams = [];
+        let lastIndex = 0;
+        let processedContent = '';
+
+        while ((match = mermaidRegex.exec(text)) !== null) {
+            processedContent += text.slice(lastIndex, match.index);
+            diagramCounter.current++;
+            const diagramId = `mermaid-${Date.now()}-${diagramCounter.current}`;
+            processedContent += `<div class="mermaid-diagram" id="${diagramId}"></div>`;
+            
+            diagrams.push({
+                id: diagramId,
+                content: match[1].trim()
+            });
+            
+            lastIndex = match.index + match[0].length;
+        }
+        
+        processedContent += text.slice(lastIndex);        
+        return { processedContent, diagrams };
+    };
 
     // Simple markdown-to-HTML conversion
     const convertMarkdownToHtml = (text) => {
@@ -21,7 +83,7 @@ const MarkdownRenderer = ({ content }) => {
         html = html.replace(/_(.*?)_/g, '<em>$1</em>');
 
         // Code blocks
-        html = html.replace(/```([\s\S]*?)```/g, '<pre class="markdown-code-block"><code>$1</code></pre>');
+        html = html.replace(/```(?!mermaid)([\s\S]*?)```/g, '<pre class="markdown-code-block"><code>$1</code></pre>');
 
         // Inline code
         html = html.replace(/`([^`]+)`/g, '<code class="markdown-inline-code">$1</code>');
@@ -42,14 +104,53 @@ const MarkdownRenderer = ({ content }) => {
         return html;
     };
 
-    const htmlContent = convertMarkdownToHtml(content);
+    const renderMermaidDiagrams = async (diagrams) => {
+        for (const diagram of diagrams) {
+            try {
+                const element = document.getElementById(diagram.id);
+                if (element) {
+                    element.innerHTML = '';
+                    const svgId= `${diagram.id}-svg`;
+                    const { svg } = await mermaid.render(svgId, diagram.content);
+                    element.innerHTML = svg;
+                }
+            } catch (error) {
+                const element = document.getElementById(diagram.id);
+                if (element) {
+                    element.innerHTML = `<div class="mermaid-error">Error rendering diagram: ${error.message}</div>`;
+                }
+            }
+        }
+    };
+
+    const { processedContent, diagrams } = processMermaidDiagrams(content);
+    const htmlContent = convertMarkdownToHtml(processedContent);
+
+    useEffect(() => {
+        if (diagrams.length > 0) {
+            const timer = setTimeout(() => {
+                renderMermaidDiagrams(diagrams);
+            }, 100);
+            
+            return () => clearTimeout(timer);
+        }
+    }, [content, diagrams.length]);
 
     return (
-        <div 
+        <div
+            ref= {containerRef}
             className="markdown-renderer"
             dangerouslySetInnerHTML={{ __html: htmlContent }}
+            style={{
+                fontFamily: 'Arial, sans-serif',
+                lineHeight: '1.6',
+                maxWidth: '100%',
+                overflow: 'auto'
+            }}
         />
     );
 };
+
+
 
 export default MarkdownRenderer;
