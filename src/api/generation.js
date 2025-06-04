@@ -4,13 +4,23 @@ import { apiPost } from './client';
  * Calls the backend to generate Jira stories.
  * @param {string} userId - The user ID.
  * @param {string} requirement - The requirement text.
+ * @param {Array} files - Array of uplaoded files (optional)
  * @returns {Promise<Object>} The response from the backend.
  */
-export async function generateJiraStories(userId, requirement) {
-    return apiPost('/generate/jira-stories', {
-        user_id: userId,
+export async function generateJiraStories(userId, requirement, files= []) {
+    const payload = {
+        user_id: userId, 
         requirement: requirement,
-    });
+    };
+    if (files && files.length > 0) {
+        payload.files = files.map(file => ({
+            name: file.name,
+            content: file.content,
+            type: file.type || 'text/plain',
+            size: file.size
+        }));
+    }
+    return apiPost('/documentation/generate', payload);
 }
 
 
@@ -21,7 +31,7 @@ export async function generateJiraStories(userId, requirement) {
  * @returns {Promise<Object>} The response from the backend.
  */
 export async function generateMermaidDiagrams(userId, diagram_type) {
-    return apiPost('/generate/diagram', {
+    return apiPost('/diagram/generate', {
         user_id: userId,
         diagram_type: diagram_type,
     });
@@ -34,9 +44,13 @@ export async function generateMermaidDiagrams(userId, diagram_type) {
  * @returns {Promise<Object>} The response from the backend.
  */
 
-export async function generateCode(userId, language) {
-    return apiPost('/generate/code', {
+export async function generateCode(userId, inputText, programmingLanguage) {
+    return apiPost('/code/generate', {
         user_id: userId,
+        prompt: inputText,
         programming_language: programmingLanguage,
     }); 
 }
+
+
+

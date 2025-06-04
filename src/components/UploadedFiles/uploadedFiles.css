@@ -1,0 +1,132 @@
+.uploaded-files-display {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.uploaded-files-display h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.files-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    background-color: white;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.file-item:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1);
+}
+
+.file-main-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    font-weight: 500;
+    color: #333;
+    flex: 1;
+    min-width: 0; 
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-type {
+    color: #6c757d;
+    font-style: italic;
+    min-width: fit-content;
+}
+
+.file-size {
+    color: #6c757d;
+    min-width: fit-content;
+    font-size: 12px;
+}
+
+.file-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: 12px;
+}
+
+.edit-file-btn,
+.delete-file-btn {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-file-btn {
+    background-color: #48dbfb;
+    color: black;
+}
+
+.edit-file-btn:hover {
+    background-color: #48dbfb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(72, 219, 251, 0.3);
+}
+
+.delete-file-btn {
+    background-color: #007bff;
+    color: black;
+}
+
+.delete-file-btn:hover {
+    background-color: #007bff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.file-item[data-edited="true"] {
+    border-color: #28a745;
+}
+
+.file-item[data-edited="true"]::before {
+    content: "📝";
+    margin-right: 8px;
+    font-size: 12px;
+}
+
+.file-item.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.file-item.loading::after {
+    content: "Processing...";
+    color: #6c757d;
+    font-size: 12px;
+    margin-left: auto;
+}
