@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import './ChatContainer.css';
 import MarkdownRenderer from '../MarkDownRenderer/markdownRenderer1';
-import { shouldUseMarkdownForResponse } from '../RenderUtils/markDownDetector';
+import { shouldRenderAsMarkdown } from '../RenderUtils/contentAnalyzers';
 
 const ChatContainer = ({ 
     messages, 
@@ -14,9 +14,22 @@ const ChatContainer = ({
     generationStage,
     isWaitingResponse
 }) => {
+
+    const [persistedDiagrams, setPersistedDiagrams] = useState(new Map());
+
     const lastBotMessageIndex = messages.map((m,i) => ({...m, originalIndex:i}))
         .reverse()
         .find(m => m.sender === 'bot')?.originalIndex;
+
+    const handleDiagramsRendered = useCallback((imageMap) => {
+        setPersistedDiagrams(prev => {
+            const newMap = new Map(prev);
+            Object.entries(imageMap).forEach(([content, imageUrl]) => {
+                newMap.set(content, imageUrl);
+            });
+            return newMap;
+        });
+    }, []);
 
     const formatFileSize = (bytes) => {
         if (bytes === 0) return '0 Bytes';
@@ -66,24 +79,37 @@ const ChatContainer = ({
         </div>
     );
 
+    const EnhancedMarkdownRenderer = ({ content, messageIndex }) => {
+        return (
+            <MarkdownRenderer 
+                content={content} 
+                onDiagramsRendered={handleDiagramsRendered}
+                persistedDiagrams={persistedDiagrams}
+                key={`markdown-${messageIndex}-${artifactStage}`} 
+            />
+        );
+    };
+
+    // Enhanced markdown detection logic
+    const shouldUseMarkdownForMessage = (message) => {
+        // Check if message has explicit markdown flags
+        if (message.hasOwnProperty('useMarkdown')) {
+            return message.useMarkdown;
+        }
+        if (message.hasOwnProperty('isMarkdown')) {
+            return message.isMarkdown;
+        }
+        
+        // Use ContentAnalyzer's enhanced detection
+        return shouldRenderAsMarkdown(message.text);
+    };
+
     return (
         <div className="chat-container">
             {messages.map((m, i) => {
-                let useMarkdown;
-                if (m.hasOwnProperty('useMarkdown')) {
-                    useMarkdown = m.useMarkdown;
-                } else if (m.hasOwnProperty('isMarkdown')) {
-                    useMarkdown = m.isMarkdown;
-                } else {
-                    useMarkdown = shouldUseMarkdownForResponse(
-                        artifactStage, 
-                        generationStage, 
-                        m.text, 
-                        m.sender
-                    );
-                }
+                const useMarkdown = shouldUseMarkdownForMessage(m);
 
-                return (
+                 return (
                     <div key={i} className={`chat-bubble ${m.sender}`} style={{ 
                         backgroundColor: m.sender === 'bot' ? '#f0f0f0' : '#007bff',
                         color: m.sender === 'bot' ? '#333' : 'white',
@@ -99,7 +125,7 @@ const ChatContainer = ({
                         )}
                         <div>
                             {useMarkdown ? (
-                                <MarkdownRenderer content={m.text} />
+                                <EnhancedMarkdownRenderer content={m.text} messageIndex={i} />
                             ) : (
                                 <div>{m.text}</div>
                             )}
