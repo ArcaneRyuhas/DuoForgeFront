@@ -1,6 +1,6 @@
+import React from 'react';
 import { shouldRenderAsMarkdown, isMermaidDiagram, isCodeContent } from './contentAnalyzers'
 import { ArtifactStages } from '../../constants/artifactStages';
-import React from 'react';
 
 export const shouldUseMarkdownForResponse = (artifactStage, generationStage, text, sender) => {
     // Debug logging

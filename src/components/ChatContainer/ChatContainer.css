@@ -236,3 +236,79 @@
         width: 100%;
     }
 }
+
+/* Your existing ChatContainer styles go here */
+
+/* Add this section for Mermaid diagram support */
+
+/* Mermaid diagram container styles */
+.mermaid-diagram {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    text-align: center;
+    overflow-x: auto;
+}
+
+/* Mermaid error styles */
+.mermaid-error {
+    color: #dc3545;
+    font-family: monospace;
+    padding: 10px;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+/* Override default Mermaid styles if needed */
+.mermaid-diagram svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Ensure Mermaid diagrams fit well within chat bubbles */
+.chat-bubble .mermaid-diagram {
+    margin: 10px 0;
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Bot message specific Mermaid styling */
+.chat-bubble.bot .mermaid-diagram {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-color: #d1d5da;
+}
+
+/* User message specific Mermaid styling (if needed) */
+.chat-bubble.user .mermaid-diagram {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Dark theme support for Mermaid diagrams */
+@media (prefers-color-scheme: dark) {
+    .mermaid-diagram {
+        background-color: #2d3748;
+        border-color: #4a5568;
+    }
+    
+    .chat-bubble.bot .mermaid-diagram {
+        background-color: #2d3748;
+        border-color: #4a5568;
+    }
+    
+    .mermaid-error {
+        background-color: #fed7d7;
+        border-color: #feb2b2;
+    }
+}
+
+/* Responsive design for diagrams */
+@media (max-width: 768px) {
+    .mermaid-diagram {
+        margin: 10px 0;
+        padding: 8px;
+    }
+}
