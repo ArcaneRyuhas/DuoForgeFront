@@ -44,11 +44,10 @@ export async function generateMermaidDiagrams(userId, diagram_type) {
  * @returns {Promise<Object>} The response from the backend.
  */
 
-export async function generateCode(userId, inputText, programmingLanguage) {
-    return apiPost('/code/generate', {
+export async function generateCode(userId, inputText) {
+    return apiPost('/code/generate-project', {
         user_id: userId,
         prompt: inputText,
-        programming_language: programmingLanguage,
     }); 
 }
 
