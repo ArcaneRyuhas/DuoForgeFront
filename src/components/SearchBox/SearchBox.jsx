@@ -77,7 +77,7 @@ const SearchBox = ({
             {uploadedFiles.length > 0 && (
                 <div className="uploaded-files-display">
                     <div className="files-header">
-                        <h4>Available Files:</h4>
+                        <h4>Uploaded Files</h4>
                         {selectedFileIds.length > 0 && (
                             <span className="selected-count">
                                 {selectedFileIds.length} selected
@@ -103,7 +103,7 @@ const SearchBox = ({
                                         >
                                             <Icon 
                                                 path={selected ? mdiCheckCircle : mdiCircleOutline} 
-                                                size={0.9}
+                                                size={0.7}
                                                 color={selected ? '#007bff' : '#666'}
                                             />
                                         </button>
@@ -122,20 +122,26 @@ const SearchBox = ({
                                     
                                     <div className="file-actions">
                                         <button
-                                            onClick={() => onEditFile(file)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onEditFile(file);
+                                            }}
                                             className="edit-file-btn"
                                             title="Edit file content"
                                             disabled={disabled || !processed}
                                         >
-                                            <Icon path={mdiLeadPencil} size={0.8} />
+                                            <Icon path={mdiLeadPencil} size={0.6} />
                                         </button>
                                         <button
-                                            onClick={() => onDeleteFile(file.id)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onDeleteFile(file.id);
+                                            }}
                                             className="delete-file-btn"
                                             title="Delete file"
                                             disabled={disabled}
                                         >
-                                            <Icon path={mdiDeleteForever} size={0.8} />
+                                            <Icon path={mdiDeleteForever} size={0.6} />
                                         </button>
                                     </div>
                                 </div>
@@ -145,7 +151,7 @@ const SearchBox = ({
                 </div>
             )}
 
-            <div className="search-input-container">
+            <div className="search-input-row">
                 <input
                     type="text"
                     placeholder="Input your project requirements here..."
