@@ -13,7 +13,15 @@ const Sidebar = () => {
   const [jiraStatus, setJiraStatus] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
 
+
+  const [projects, setprojects] = useState([
+    {id: 1, name: 'Unnamed project'}
+  ])
+  const [editingProjectId, setEditingProjectId] = useState(null);
+  const [tempProjectName, setTempProjectName] = useState('');
+
   const settingsMenuRef = useRef(null);
+  const editInputRef = useRef(null);
 
   useEffect (() => {
     const isConnected = jiraIntegration.isJiraConnected();
@@ -34,6 +42,13 @@ const Sidebar = () => {
         document.removeEventListener('mousedown', handleClicksOutside)
     };
   }, []);
+
+  useEffect (() => {
+    if (editingProjectId && editInputRef.current) {
+        editInputRef.current.focus();
+        editInputRef.current.select();
+    }
+  }, [editingProjectId]);
 
   const handleSettingsClick = () => {
     setShowSettingsMenu(!showSettingsMenu);
@@ -71,6 +86,40 @@ const Sidebar = () => {
     setShowSettingsMenu(false);
   };
 
+  const startEditingProject = (projectId, currentName) => {
+    setEditingProjectId(projectId);
+    setTempProjectName(currentName);
+  }
+
+  const saveProjectName = (projectId) => {
+    if (tempProjectName.trim()){
+        setprojects(projects.map(project => 
+            project.id === projectId
+            ?{...project, name: tempProjectName.trim()}
+            : project
+        ));
+    }
+    setEditingProjectId(null);
+    setTempProjectName('');
+  };
+
+  const cancelEditing = () => {
+    setEditingProjectId(null);
+    setTempProjectName('');
+  };
+
+  const handleKeyPress = (e, projectId) => {
+    if (e.key === 'Enter') {
+        saveProjectName(projectId);
+    } else if (e.key === 'Escape') {
+        cancelEditing();
+    }
+  }; 
+
+  const handleInputBlur = (projectId) => {
+    saveProjectName(projectId);
+  };
+
   const settingsMenuItems = [
         {
             label: 'Account',
@@ -101,22 +150,38 @@ const Sidebar = () => {
             {extended ? 
             <div className="recent">
                 <p className="recent-title">Recent</p>
-                <div className="recent-entry">
+                {projects.map(project => (
+                    <div key={project.id} className="recent-entry">
                     <img src={assets.message_icon} alt='message icon'/>
-                    <p>Exam Generation...</p>
+                    {editingProjectId === project.id ? (
+                        <input
+                        ref={editInputRef}
+                        type="text"
+                        value={tempProjectName}
+                        onChange={(e) => setTempProjectName(e.target.value)}
+                        onKeyDown={(e) => handleKeyPress(e, project.id)}
+                        onBlur ={() => handleInputBlur(project.id)}
+                        className = "projec-name-input"
+                        maxLength={50}
+                        />
+                    ): (
+                        <p
+                        onDoubleClick={()=> startEditingProject(project.id, project.name)}
+                        className="project-name-editable"
+                        title="Double click to edit the project name"
+                    >
+                        {project.name}
+                    </p>
+                    )}
                 </div>
+                ))}
             </div>
-            : null
-            }
+            :null}
         </div>
         <div className="bottom">
             <div className="bottom-item recent-entry">
                 <img src={assets.question_icon} alt='question icon'/>
                 {extended ? <p>Help</p> : null}
-            </div>
-            <div className="bottom-item recent-entry">
-                <img src={assets.history_icon} alt='history icon'/>
-                {extended ? <p>Activity</p> : null}
             </div>
             <div className="bottom-item recent-entry" style={{position: 'relative'}}>
                 <img 
