@@ -83,14 +83,14 @@ const Main = ({ user }) => {
 
         setInputValue('');
         setSelectedFileIds([]);
+        
+        if (fileIds.length > 0) {
+        fileIds.forEach(fileId => {
+            removeFiles(fileId);
+        });
+    }
 
         await handleSendMessage(message, fileIds);
-
-        if (fileIds.length > 0) {
-            fileIds.forEach(fileId => {
-                removeFiles(fileId);
-            });
-        }
     };
 
     const handleFileUpload = (file) => {

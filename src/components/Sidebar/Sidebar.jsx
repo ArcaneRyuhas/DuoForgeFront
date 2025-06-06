@@ -1,12 +1,95 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './Sidebar.css'
 import { assets } from '../../assets/assets';
+import jiraIntegration from '../../hooks/Jira/jiraIntegration';
+import JiraCredentialModal from '../JiraModal/JiraCredentialModal';
 
 
 const Sidebar = () => {
 
-  const [extended, setExtended] = useState(false)
-  
+  const [extended, setExtended] = useState(false);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [showJiraModal, setShowJiraModal] = useState(false);
+  const [jiraStatus, setJiraStatus] = useState(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const settingsMenuRef = useRef(null);
+
+  useEffect (() => {
+    const isConnected = jiraIntegration.isJiraConnected();
+    if (isConnected) {
+        const status = jiraIntegration.getConnectionStatus();
+        setJiraStatus(status);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleClicksOutside = (event) => {
+        if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target)){
+            setShowSettingsMenu(false);
+        }
+    }; 
+    document.addEventListener('mousedown', handleClicksOutside);
+    return() => {
+        document.removeEventListener('mousedown', handleClicksOutside)
+    };
+  }, []);
+
+  const handleSettingsClick = () => {
+    setShowSettingsMenu(!showSettingsMenu);
+  }
+
+  const handleJiraConnection = async (formData) => {
+    setIsConnecting(true);
+    try {
+        const result = await jiraIntegration.connectToJira(
+            formData.domain,
+            formData.email,
+            formData.api_token
+        );
+        if (result.success){
+            const status = jiraIntegration.getConnectionStatus();
+            setJiraStatus(status);
+            setShowJiraModal(false);
+            alert('Succesfully connected to Jira!');
+        } else {
+            alert (`Failed to connect: ${result.message}`);
+        }
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+    } finally {
+        setIsConnecting(false)
+    }
+  };
+
+  const handleJiraDisconnect =()=> {
+    const result = jiraIntegration.disconnect();
+    if (result.success){
+        setJiraStatus(null);
+        alert('Disconnect from Jira succesfully');
+    }
+    setShowSettingsMenu(false);
+  };
+
+  const settingsMenuItems = [
+        {
+            label: 'Account',
+            action: () => console.log('Account')
+        },
+        {
+            label: 'People',
+            action: () => console.log('People')
+        },
+        {
+            label: 'Appearance',
+            action: () => console.log('Appearance')
+        },
+        { type: 'separator' },
+        {
+            label: jiraStatus ? 'Disconnect from Jira' : 'Link InfyCode to Jira Account',
+            action: jiraStatus ? handleJiraDisconnect : () => setShowJiraModal(true)
+        }
+    ];
   return (
     <div className="sidebar">
         <div className="top">
@@ -35,13 +118,63 @@ const Sidebar = () => {
                 <img src={assets.history_icon} alt='history icon'/>
                 {extended ? <p>Activity</p> : null}
             </div>
-            <div className="bottom-item recent-entry">
-                <img src={assets.setting_icon} alt='history icon'/>
-                {extended ? <p>Settings</p> : null }
-            </div>
+            <div className="bottom-item recent-entry" style={{position: 'relative'}}>
+                <img 
+                src={assets.setting_icon} 
+                alt='history icon'
+                onClick={handleSettingsClick}
+            />
+                {extended ? <p onClick={handleSettingsClick}>Settings</p> : null }
+
+                {showSettingsMenu && (
+                        <div 
+                            ref={settingsMenuRef}
+                            className="settings-dropdown"
+                        >
+                            {settingsMenuItems.map((item, index) => {
+                                if (item.type === 'separator') {
+                                    return (
+                                        <div 
+                                            key={index} 
+                                            className="settings-menu-separator"
+                                        />
+                                    );
+                                }
+
+                                return (
+                                    <div
+                                        key={index}
+                                        className="settings-menu-item"
+                                        onClick={() => {
+                                            item.action();
+                                            if (!item.label.includes('Jira')) {
+                                                setShowSettingsMenu(false);
+                                            }
+                                        }}
+                                    >
+                                        <span>{item.label}</span>
+                                        {item.shortcut && (
+                                            <span className="settings-menu-shortcut">
+                                                {item.shortcut}
+                                            </span>
+                                        )}
+                                        {item.hasSubmenu && (
+                                            <span className="settings-menu-arrow">▶</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            </div> 
+             <JiraCredentialModal 
+                isOpen={showJiraModal}
+                onClose={() => setShowJiraModal(false)}
+                onSubmit={handleJiraConnection}
+            />
         </div>
-    </div>
-  )
+    )
 }
 
-export default Sidebar
+export default Sidebar;
