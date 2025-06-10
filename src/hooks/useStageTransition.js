@@ -48,7 +48,7 @@ export function useStageTransitions(
             if (artifactStage === ArtifactStages.Diagram) {
                 sendMessage("What type of diagram do you want me to generate?", 'bot');
             } else if (artifactStage === ArtifactStages.Code) {
-                sendMessage("Let's set up your project! Please tell me:\n\n• Frontend: React, Vue, Angular, or other?\n• Backend: Python, Java, Node.js, or other?\n• Database: MySQL, PostgreSQL, MongoDB, or other?\n• Deployment: AWS, Azure, Google Cloud, or local?", 'bot');
+                sendMessage("Let's set up your project! Please specify how do you want:<br><br>• <b>Frontend</b>: React, Vue, Angular, or other. <br>• <b>Backend</b>: Python, Java, Node.js, or other.<br>• <b>Database</b>: MySQL, PostgreSQL, MongoDB, or other.<br>• <b>Deployment</b>: AWS, Azure, Google Cloud, or local.", 'bot');
             } else if (artifactStage === ArtifactStages.Conversation) {
                 sendMessage("Great! Now we can have a normal conversation. What would you like to discuss?", 'bot');
             }

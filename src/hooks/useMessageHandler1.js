@@ -8,7 +8,7 @@ export function useMessageHandler(artifactStage, generationStage, user, getFileB
     const [isWaitingResponse, setIsWaitingResponse] = useState(false);
     const [disabledModifyIndexes, setDisabledModifyIndexes] = useState([]);
 
-    const sendMessage = useCallback((text, sender, files =[]) => {
+    const sendMessage = useCallback((text, sender, files =[], isError= false) => {
         const useMarkdown = shouldUseMarkdownForResponse(
             artifactStage,
             generationStage,
@@ -25,7 +25,8 @@ export function useMessageHandler(artifactStage, generationStage, user, getFileB
             timestamp: Date.now(),
             isMarkdown: useMarkdown,
             forceCodeRendering: artifactStage == ArtifactStages.Code && sender == 'bot', 
-            files: files || []
+            files: files || [], 
+            isError: isError
         };
 
         setMessages(prevMessages => [...prevMessages, messageObject]);
@@ -174,7 +175,7 @@ export function useMessageHandler(artifactStage, generationStage, user, getFileB
             }
         } catch (error) {
             console.error('Error processing request:', error);
-            sendMessage("Sorry, there was an error processing your request.", 'bot');
+            sendMessage("Sorry, there was an error processing your request. Please re-write your requirements.", 'bot');
         } finally {
             setIsWaitingResponse(false);
         }
