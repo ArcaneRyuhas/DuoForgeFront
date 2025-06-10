@@ -2,17 +2,21 @@ import React from 'react';
 import Icon from '@mdi/react';
 import { mdiLeadPencil, mdiDeleteForever } from '@mdi/js';
 import './uploadedFiles.css';
+import ThemeToggle from '../ThemeToggle/ThemeToggle';
 
 const UploadedFiles = ({
     files, 
     onEditFile,
     onDeleteFile
 }) => {
-    if (files.length== 0) return null;
+    if (files.length == 0) return null;
     
     return (
         <div className="uploaded-files-display">
-            <h4>Uploaded Files:</h4>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h4>Uploaded Files:</h4>
+                <ThemeToggle />
+            </div>
             <div className="files-list">
                 {files.map(file => (
                     <div key={file.id} className="file-item">
@@ -25,12 +29,12 @@ const UploadedFiles = ({
                         </div>
                         <div className="file-actions">
                             <button
-                                    onClick={() => onEditFile(file)}
-                                    className="edit-file-btn"
-                                    title="Edit file content"
-                                >
-                                    <Icon path={mdiLeadPencil} size={0.8} />
-                                </button>
+                                onClick={() => onEditFile(file)}
+                                className="edit-file-btn"
+                                title="Edit file content"
+                            >
+                                <Icon path={mdiLeadPencil} size={0.8} />
+                            </button>
                             <button
                                 onClick={() => onDeleteFile(file.id)}
                                 className="delete-file-btn"

@@ -6,6 +6,7 @@ import ChatContainer from '../ChatContainer/ChatContainer';
 import FileEditor from '../FileEditor/FileEditor';
 import JiraCredentialModal from '../../components/JiraModal/JiraCredentialModal';
 import { uploadStoriesToJira } from '../../../src/api/jira';
+import { useTheme } from '../../contexts/ThemeContext';
 
 //Hooks
 import { useStageManager } from '../../hooks/stageManager';
@@ -31,6 +32,8 @@ const Main = ({ user }) => {
     const [selectedFileIds, setSelectedFileIds] = useState([]);
     const [showJiraModal, setShowJiraModal] = useState(false);
     const [selectedMessageIndex, setSelectedMessageIndex] = useState(null);
+
+    const { theme } = useTheme();
 
     const {
         artifactStage,

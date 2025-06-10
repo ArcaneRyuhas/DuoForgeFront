@@ -1,14 +1,16 @@
+
 .uploaded-files-display {
     margin: 20px 0;
     padding: 15px;
-    background-color: #f8f9fa;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
-    border-left: 4px solid #007bff;
+    border-left: 4px solid var(--accent-primary);
+    transition: background-color 0.3s ease;
 }
 
 .uploaded-files-display h4 {
     margin: 0 0 10px 0;
-    color: #333;
+    color: var(--text-primary);
     font-size: 14px;
     font-weight: 600;
 }
@@ -24,16 +26,17 @@
     align-items: center;
     gap: 12px;
     padding: 8px 12px;
-    background-color: white;
+    background-color: var(--bg-tertiary);
     border-radius: 6px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--border-color);
     font-size: 13px;
     transition: all 0.2s ease;
 }
 
 .file-item:hover {
-    border-color: #007bff;
-    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1);
+    border-color: var(--accent-primary);
+    box-shadow: 0 2px 4px var(--shadow-light);
+    background-color: var(--bg-hover);
 }
 
 .file-main-info {
@@ -46,22 +49,22 @@
 
 .file-name {
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
     flex: 1;
-    min-width: 0; 
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .file-type {
-    color: #6c757d;
+    color: var(--text-secondary);
     font-style: italic;
     min-width: fit-content;
 }
 
 .file-size {
-    color: #6c757d;
+    color: var(--text-muted);
     min-width: fit-content;
     font-size: 12px;
 }
@@ -72,8 +75,7 @@
     margin-left: 12px;
 }
 
-.edit-file-btn,
-.delete-file-btn {
+.edit-file-btn, .delete-file-btn {
     padding: 6px 10px;
     border: none;
     border-radius: 6px;
@@ -88,25 +90,26 @@
 }
 
 .edit-file-btn {
-    background-color: #48dbfb;
-    color: black;
+    background-color: var(--accent-secondary);
+    color: var(--text-primary);
 }
 
 .edit-file-btn:hover {
-    background-color: #48dbfb;
+    background-color: var(--accent-secondary);
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(72, 219, 251, 0.3);
+    box-shadow: 0 2px 4px var(--shadow-medium);
+    opacity: 0.9;
 }
 
 .delete-file-btn {
-    background-color: #007bff;
-    color: black;
+    background-color: #dc3545;
+    color: white;
 }
 
 .delete-file-btn:hover {
-    background-color: #007bff;
+    background-color: #c82333;
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
 }
 
 .file-item[data-edited="true"] {
@@ -126,7 +129,7 @@
 
 .file-item.loading::after {
     content: "Processing...";
-    color: #6c757d;
+    color: var(--text-muted);
     font-size: 12px;
     margin-left: auto;
 }

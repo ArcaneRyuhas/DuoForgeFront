@@ -4,6 +4,7 @@ import Icon from '@mdi/react';
 import { mdiLeadPencil, mdiDeleteForever } from '@mdi/js';
 import { extractFileContent } from '../../utils/fileExtractors';
 import './FileEditor.css';
+import ThemeToggle from '../ThemeToggle/ThemeToggle';
 
 const FileEditor = ({ file, onSave, onClose, onDelete }) => {
     const [content, setContent] = useState('');
@@ -140,6 +141,7 @@ const FileEditor = ({ file, onSave, onClose, onDelete }) => {
                     </span>
                 </div>
                 <div className="file-actions">
+                    <ThemeToggle/>
                     {!isEditing ? (
                         <button onClick={toggleEdit} className="edit-btn">
                             <Icon path={mdiLeadPencil} size={0.8} /> 

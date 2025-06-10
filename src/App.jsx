@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import Home from "./components/Home/Home";
 import Dashboard from "./components/Dashboard/Dashboard";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 function App() {
   const auth = useAuth();
@@ -15,30 +16,32 @@ function App() {
   if (auth.error) return <div>Error: {auth.error.message}</div>;
 
   return (
-    <Router>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            auth.isAuthenticated ? (
-              <Navigate to="/dashboard" />
-            ) : (
-              <Home />
-            )
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            auth.isAuthenticated ? (
-              <Dashboard user={auth.user} />
-            ) : (
-              <Navigate to="/" />
-            )
-          }
-        />
-      </Routes>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              auth.isAuthenticated ? (
+                <Navigate to="/dashboard" />
+              ) : (
+                <Home />
+              )
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              auth.isAuthenticated ? (
+                <Dashboard user={auth.user} />
+              ) : (
+                <Navigate to="/" />
+              )
+            }
+          />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 

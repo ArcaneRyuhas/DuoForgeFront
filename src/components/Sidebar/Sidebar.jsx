@@ -3,16 +3,18 @@ import './Sidebar.css'
 import { assets } from '../../assets/assets';
 import jiraIntegration from '../../hooks/Jira/jiraIntegration';
 import JiraCredentialModal from '../JiraModal/JiraCredentialModal';
-
+import ThemeToggle from '../ThemeToggle/ThemeToggle';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Sidebar = () => {
-
   const [extended, setExtended] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [showAppearanceMenu, setShowAppearanceMenu] = useState(false);
   const [showJiraModal, setShowJiraModal] = useState(false);
   const [jiraStatus, setJiraStatus] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
 
+  const { theme, toggleTheme } = useTheme();
 
   const [projects, setprojects] = useState([
     {id: 1, name: 'Unnamed project'}
@@ -21,6 +23,7 @@ const Sidebar = () => {
   const [tempProjectName, setTempProjectName] = useState('');
 
   const settingsMenuRef = useRef(null);
+  const appearanceMenuRef = useRef(null);
   const editInputRef = useRef(null);
 
   useEffect (() => {
@@ -35,6 +38,9 @@ const Sidebar = () => {
     const handleClicksOutside = (event) => {
         if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target)){
             setShowSettingsMenu(false);
+        }
+        if (appearanceMenuRef.current && !appearanceMenuRef.current.contains(event.target)){
+            setShowAppearanceMenu(false);
         }
     }; 
     document.addEventListener('mousedown', handleClicksOutside);
@@ -52,6 +58,19 @@ const Sidebar = () => {
 
   const handleSettingsClick = () => {
     setShowSettingsMenu(!showSettingsMenu);
+    setShowAppearanceMenu(false); // Close appearance menu when settings menu opens
+  }
+
+  const handleAppearanceClick = () => {
+    setShowAppearanceMenu(!showAppearanceMenu);
+  }
+
+  const handleThemeChange = (selectedTheme) => {
+    if (selectedTheme !== theme) {
+      toggleTheme();
+    }
+    setShowAppearanceMenu(false);
+    setShowSettingsMenu(false);
   }
 
   const handleJiraConnection = async (formData) => {
@@ -131,7 +150,8 @@ const Sidebar = () => {
         },
         {
             label: 'Appearance',
-            action: () => console.log('Appearance')
+            action: handleAppearanceClick,
+            hasSubmenu: true
         },
         { type: 'separator' },
         {
@@ -139,107 +159,137 @@ const Sidebar = () => {
             action: jiraStatus ? handleJiraDisconnect : () => setShowJiraModal(true)
         }
     ];
-  return (
-    <div className="sidebar">
-        <div className="top">
-            <img onClick={()=>setExtended(prev=>!prev)} className='menu' src={assets.menu_icon} alt='menu icon'/>
-            <div className="new-chat">
-                <img src={assets.plus_icon} alt='expand icon' style={{ filter: 'hue-rotate(200deg)' }}/>
-                {extended ? <p>New Project</p> : null}
-            </div>
-            {extended ? 
-            <div className="recent">
-                <p className="recent-title">Recent</p>
-                {projects.map(project => (
-                    <div key={project.id} className="recent-entry">
-                    <img src={assets.message_icon} alt='message icon'/>
-                    {editingProjectId === project.id ? (
-                        <input
-                        ref={editInputRef}
-                        type="text"
-                        value={tempProjectName}
-                        onChange={(e) => setTempProjectName(e.target.value)}
-                        onKeyDown={(e) => handleKeyPress(e, project.id)}
-                        onBlur ={() => handleInputBlur(project.id)}
-                        className = "projec-name-input"
-                        maxLength={50}
-                        />
-                    ): (
-                        <p
-                        onDoubleClick={()=> startEditingProject(project.id, project.name)}
-                        className="project-name-editable"
-                        title="Double click to edit the project name"
-                    >
-                        {project.name}
-                    </p>
-                    )}
-                </div>
-                ))}
-            </div>
-            :null}
-        </div>
-        <div className="bottom">
-            <div className="bottom-item recent-entry">
-                <img src={assets.question_icon} alt='question icon'/>
-                {extended ? <p>Help</p> : null}
-            </div>
-            <div className="bottom-item recent-entry" style={{position: 'relative'}}>
-                <img 
-                src={assets.setting_icon} 
-                alt='history icon'
-                onClick={handleSettingsClick}
-            />
-                {extended ? <p onClick={handleSettingsClick}>Settings</p> : null }
 
-                {showSettingsMenu && (
-                        <div 
-                            ref={settingsMenuRef}
-                            className="settings-dropdown"
-                        >
-                            {settingsMenuItems.map((item, index) => {
-                                if (item.type === 'separator') {
-                                    return (
-                                        <div 
-                                            key={index} 
-                                            className="settings-menu-separator"
-                                        />
-                                    );
-                                }
-
-                                return (
-                                    <div
-                                        key={index}
-                                        className="settings-menu-item"
-                                        onClick={() => {
-                                            item.action();
-                                            if (!item.label.includes('Jira')) {
-                                                setShowSettingsMenu(false);
-                                            }
-                                        }}
-                                    >
-                                        <span>{item.label}</span>
-                                        {item.shortcut && (
-                                            <span className="settings-menu-shortcut">
-                                                {item.shortcut}
-                                            </span>
-                                        )}
-                                        {item.hasSubmenu && (
-                                            <span className="settings-menu-arrow">▶</span>
-                                        )}
-                                    </div>
-                                );
-                            })}
+return (
+        <div className={`sidebar ${extended ? 'extended' : ''}`}>
+                <div className="top">
+                        <img onClick={()=>setExtended(prev=>!prev)} className='menu' src={assets.menu_icon} alt='menu icon'/>
+                        <div className="new-chat">
+                                <img src={assets.plus_icon} alt='expand icon' style={{filter: 'hue-rotate(200deg)'}}/>
+                                {extended ? <p>New Project</p> : null}
                         </div>
-                    )}
+                        {extended ? 
+                        <div className="recent">
+                                <p className="recent-title">Recent</p>
+                                {projects.map(project => (
+                                        <div key={project.id} className="recent-entry">
+                                                <img src={assets.message_icon} alt='message icon' style={{ filter: 'hue-rotate(100deg)' }}/>
+                                                {editingProjectId === project.id ? (
+                                                        <input
+                                                                ref={editInputRef}
+                                                                type="text"
+                                                                value={tempProjectName}
+                                                                onChange={(e) => setTempProjectName(e.target.value)}
+                                                                onKeyDown={(e) => handleKeyPress(e, project.id)}
+                                                                onBlur ={() => handleInputBlur(project.id)}
+                                                                className = "projec-name-input"
+                                                                maxLength={100}
+                                                        />
+                                                ): (
+                                                        <p
+                                                                onDoubleClick={()=> startEditingProject(project.id, project.name)}
+                                                                className="project-name-editable"
+                                                                title="Double click to edit the project name"
+                                                        >
+                                                                {project.name}
+                                                        </p>
+                                                )}
+                                        </div>
+                                ))}
+                        </div>
+                        :null}
                 </div>
-            </div> 
-             <JiraCredentialModal 
-                isOpen={showJiraModal}
-                onClose={() => setShowJiraModal(false)}
-                onSubmit={handleJiraConnection}
-            />
+                <div className="bottom">
+                        <div className="bottom-item recent-entry">
+                                <img src={assets.question_icon} alt='question icon'/>
+                                {extended ? <p>Help</p> : null}
+                        </div>
+                        <div className="bottom-item recent-entry settings-item" style={{ position: 'relative' }}>
+                                <img 
+                                        src={assets.setting_icon} 
+                                        alt='settings icon'
+                                        onClick={handleSettingsClick}
+                                />
+                                {extended ? <p onClick={handleSettingsClick}>Settings</p> : null }
+
+                                {showSettingsMenu && (
+                                        <div 
+                                                ref={settingsMenuRef}
+                                                className="settings-dropdown"
+                                        >
+                                                {settingsMenuItems.map((item, index) => {
+                                                        if (item.type === 'separator') {
+                                                                return (
+                                                                        <div 
+                                                                                key={index} 
+                                                                                className="settings-menu-separator"
+                                                                        />
+                                                                );
+                                                        }
+
+                                                        return (
+                                                                <div
+                                                                        key={index}
+                                                                        className="settings-menu-item"
+                                                                        onClick={() => {
+                                                                                item.action();
+                                                                                if (!item.label.includes('Jira') && !item.hasSubmenu) {
+                                                                                        setShowSettingsMenu(false);
+                                                                                }
+                                                                        }}
+                                                                        style={{ position: 'relative' }}
+                                                                >
+                                                                        <span>{item.label}</span>
+                                                                        {item.shortcut && (
+                                                                                <span className="settings-menu-shortcut">
+                                                                                        {item.shortcut}
+                                                                                </span>
+                                                                        )}
+                                                                        {item.hasSubmenu && (
+                                                                                <span className="settings-menu-arrow">▶</span>
+                                                                        )}
+                                                                        {item.hasSubmenu && showAppearanceMenu && (
+                                                                                <div
+                                                                                        ref={appearanceMenuRef}
+                                                                                        className="appearance-dropdown"
+                                                                                        style={{
+                                                                                                position: 'absolute',
+                                                                                                top: 0,
+                                                                                                left: '100%',
+                                                                                                marginLeft: '8px',
+                                                                                                zIndex: 1000
+                                                                                        }}
+                                                                                >
+                                                                                        <div
+                                                                                                className={`appearance-menu-item ${theme === 'light' ? 'active' : ''}`}
+                                                                                                onClick={() => handleThemeChange('light')}
+                                                                                        >
+                                                                                                <span className="label">Light mode</span>
+                                                                                                {theme === 'light' && <span className="checkmark">✓</span>}
+                                                                                        </div>
+                                                                                        <div
+                                                                                                className={`appearance-menu-item ${theme === 'dark' ? 'active' : ''}`}
+                                                                                                onClick={() => handleThemeChange('dark')}
+                                                                                        >
+                                                                                                <span className="label">Dark mode</span>
+                                                                                                {theme === 'dark' && <span className="checkmark">✓</span>}
+                                                                                        </div>
+                                                                                </div>
+                                                                        )}
+                                                                </div>
+                                                        );
+                                                })}
+                                        </div>
+                                )}
+                        </div>
+                </div> 
+                <JiraCredentialModal 
+                        isOpen={showJiraModal}
+                        onClose={() => setShowJiraModal(false)}
+                        onSubmit={handleJiraConnection}
+                />
         </div>
-    )
+)
 }
 
 export default Sidebar;

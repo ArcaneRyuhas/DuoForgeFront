@@ -4,7 +4,7 @@
     display: inline-flex;
     flex-direction: column;
     justify-content: space-between;
-    background-color: #f0f0f0;
+    background-color: var(--bg-tertiary);
     padding: 25px 15px;
 }
 
@@ -24,18 +24,23 @@
     align-items: center;
     gap: 10px;
     padding: 10px 15px;
-    background-color: #bbd2f5;
+    background-color: var(--bg-secondary);
     border-radius: 50px;
     font-size: 14px;
-    color: #454546;
     cursor: pointer;
     width: 100%;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar .new-chat:hover {
+    background-color: var(--hover-bg);
 }
 
 .sidebar .recent{
     display: flex;
     flex-direction: column;
 }
+
 .sidebar .recent-title{
     margin-top: 30px;
     margin-bottom: 20px;
@@ -48,13 +53,12 @@
     padding: 10px;
     padding-right: 40px;
     border-radius: 50px;
-    color: #282828;
     cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
 .sidebar .recent-entry:hover{
-    background-color: #f0f0f0;
-
+    background-color: var(--bg-secondary); 
 }
 
 .sidebar .bottom{
@@ -65,27 +69,29 @@
 .sidebar .bottom-item {
     padding: 8px 10px;
     border-radius: 8px;
+    cursor: pointer;
     transition: background-color 0.2s ease;
 }
 
 .sidebar .bottom-item:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: var(--bg-secondary);
 }
 
 .settings-dropdown {
     position: absolute;
     bottom: 100%;
     left: 0;
-    background-color: #bbd2f5;
+    background-color: var(--bg-secondary);
     border: 1px solid #bbd2f5;
-    border-radius: 3px;
+    border-radius: 8px;
     min-width: 280px;
-    padding: 5px 0;
+    padding: 8px 0;
     z-index: 1000;
-    box-shadow: 0 4px 12px rgba(8, 0, 0, 0.3);
+    box-shadow: 0 8px 12px rgba(8, 0, 0, 0.4);
     font-size: 13px;
-    color: #094771;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    opacity: 1 !important;
+    backdrop-filter: none;
 }
 
 .sidebar:not(.extended) .settings-dropdown {
@@ -93,23 +99,24 @@
 }
 
 .settings-menu-item {
-    padding: 8px 16px;
+    padding: 12px 16px;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: background-color 0.1s ease;
+    transition: background-color 0.2s ease;
+    position: relative;
+    min-height: 36px;
 }
 
 .settings-menu-item:hover {
-    background-color: #094771 !important;
-    color: #282828;
+    background-color: var(--bg-secondary) !important;
 }
 
 .settings-menu-separator {
     height: 1px;
-    background-color: #094771;
-    margin: 5px 0;
+    background-color: var(--bg-secondary);
+    margin: 8px 0;
 }
 
 .settings-menu-shortcut {
@@ -127,13 +134,72 @@
     position: relative;
 }
 
-.sidebar .bottom-item.settings-item img,
+.sidebar .bottom-item.settings-item img, 
 .sidebar .bottom-item.settings-item p {
     cursor: pointer;
     transition: opacity 0.2s ease;
 }
 
-.sidebar .bottom-item.settings-item:hover img,
+.sidebar .bottom-item.settings-item:hover img, 
 .sidebar .bottom-item.settings-item:hover p {
     opacity: 0.8;
+}
+
+
+.appearance-dropdown {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    margin-left: 8px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 0;
+    min-width: 180px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    z-index: 1001;
+    white-space: nowrap;
+    opacity: 1 !important;
+    backdrop-filter: none;
+}
+
+.sidebar:not(.extended) .appearance-dropdown {
+    left: 100%;
+    margin-left: 8px;
+}
+
+.appearance-menu-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--text-color);
+    transition: background-color 0.2s ease;
+    min-height: 40px;
+}
+
+.appearance-menu-item:hover {
+    background-color: var(--hover-bg);
+}
+
+.appearance-menu-item.active {
+    color: var(--primary-color);
+    background-color: var(--hover-bg);
+}
+
+.appearance-menu-item .checkmark {
+    margin-left: auto;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.appearance-menu-item .emoji {
+    font-size: 18px;
+}
+
+.appearance-menu-item .label {
+    flex: 1;
+    font-weight: 500;
 }

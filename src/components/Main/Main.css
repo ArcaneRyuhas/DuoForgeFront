@@ -1,144 +1,196 @@
+
+:root {
+  --bg-primary: #f0f0f0;
+  --bg-secondary: #ffffff;
+  --bg-hover: #bbd2f5;
+  --text-primary: #1e272e;
+  --text-secondary: #484f58;
+  --text-muted: #ced6e0;
+  --text-nav: #d2dae2;
+  --border-color: #e0e0e0;
+  --shadow-light: rgba(0, 0, 0, 0.1);
+  --shadow-medium: rgba(0, 0, 0, 0.2);
+  --accent-primary: #54a0ff;
+  --accent-secondary: #48dbfb;
+  --gradient-from: #a29bfe;
+  --gradient-to: #48dbfb;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-hover: #3a3a3a;
+  --text-primary: #ffffff;
+  --text-secondary: #e0e0e0;
+  --text-muted: #a0a0a0;
+  --text-nav: #ffffff;
+  --border-color: #404040;
+  --shadow-light: rgba(0, 0, 0, 0.3);
+  --shadow-medium: rgba(0, 0, 0, 0.5);
+  --accent-primary: #6c7ce7;
+  --accent-secondary: #5ac8fa;
+  --gradient-from: #b19cd9;
+  --gradient-to: #5ac8fa;
+}
+
 .main {
-    flex: 1;
-    min-height: 100vh;
-    max-height: 100vh;
-    position: relative;
-    background-color: #f0f0f0;
+  flex: 1;
+  min-height: 100vh;
+  max-height: 100vh;
+  position: relative;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .main .nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 22px;
-    padding: 20px;
-    color: #d2dae2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 22px;
+  padding: 20px;
+  color: var(--text-nav);
 }
 
 .main .nav img {
-    width: 40px;
-    border-radius: 50%;
+  width: 40px;
+  border-radius: 50%;
 }
 
 .main-container {
-    max-height: 70vh;
-    max-width: 80vw;
-    margin: auto;
-    overflow: scroll;
-    min-height: 70vh;
-    min-width: 80vw;
-    overflow-x: hidden;
-    overflow-y: auto;
+  max-height: 70vh;
+  max-width: 80vw;
+  margin: auto;
+  overflow: scroll;
+  min-height: 70vh;
+  min-width: 80vw;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .main .greet {
-    margin: 20px 0px;
-    font-size: 56px;
-    color: #54a0ff;
-    font-weight: 500;
-    padding: 10px;
+  margin: 20px 0px;
+  font-size: 56px;
+  color: var(--accent-primary);
+  font-weight: 500;
+  padding: 10px;
 }
 
 .main .greet span {
-    background: -webkit-linear-gradient(16deg, #a29bfe, #48dbfb);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+  background: -webkit-linear-gradient(16deg, var(--gradient-from), var(--gradient-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .main .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 15px;
-    padding: 15px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  padding: 15px;
 }
 
 .main .card {
-    max-height: 70vh;
-    max-width: 80vw;
-    padding: 15px;
-    background-color: #f0f0f0;
-    border-radius: 10px;
-    position: relative;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-height: 70vh;
+  max-width: 80vw;
+  padding: 15px;
+  background-color: var(--bg-secondary);
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 2px 4px var(--shadow-light);
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
 }
 
 .main .card:hover {
-    background-color: #bbd2f5;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: var(--bg-hover);
+  box-shadow: 0 4px 8px var(--shadow-medium);
 }
 
 .card p {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #484f58;
-    font-size: 17px;
+  text-align: center;
+  margin-bottom: 20px;
+  color: var(--text-secondary);
+  font-size: 17px;
 }
 
 .main .card img {
-    width: 35px;
-    padding: 5px;
-    position: relative;
-    background-color: #48dbfb;
-    border-radius: 20px;
-    bottom: 10px;
-    right: 10px;
+  width: 35px;
+  padding: 5px;
+  position: relative;
+  background-color: var(--accent-secondary);
+  border-radius: 20px;
+  bottom: 10px;
+  right: 10px;
 }
 
-
 .card button {
-    background-color: #48dbfb;
-    border: none;
-    border-radius: 20px;
-    padding: 5px 15px;
-    margin: 2px;
-    opacity: 0.7;
-    color: #1e272e;
-    cursor: pointer;
-    transition: opacity 0.3s ease, box-shadow 0.3s ease;
+  background-color: var(--accent-secondary);
+  border: none;
+  border-radius: 20px;
+  padding: 5px 15px;
+  margin: 2px;
+  opacity: 0.7;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .card button:hover {
-    opacity: 1;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  opacity: 1;
+  box-shadow: 0 4px 8px var(--shadow-medium);
 }
 
 .card .active {
-    opacity: 1;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-
-.main .card:hover {
-    background-color: #bbd2f5;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  opacity: 1;
+  box-shadow: 0 4px 8px var(--shadow-medium);
 }
 
 .main-bottom {
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-    transform: translateX(-50%);
-    width: 100%;
-    max-width: 80vw;
-    padding: 5px 20px;
-    margin: 0 auto;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 80vw;
+  padding: 5px 20px;
+  margin: 0 auto;
 }
 
 .main .bottom-info {
-    font-size: 13px;
-    margin: 15px auto;
-    text-align: center;
-    font-weight: 300;
-    color: #ced6e0;
+  font-size: 13px;
+  margin: 15px auto;
+  text-align: center;
+  font-weight: 300;
+  color: var(--text-muted);
 }
 
 .file-action-icon {
-    width: 16px;
-    height: 16px;
-    margin-right: 4px;
-    vertical-align: middle;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+  vertical-align: middle;
 }
 
+/* Test theme toggle button styles */
+.theme-toggle-test {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
 
+.theme-toggle-test:hover {
+  background: var(--bg-hover);
+  box-shadow: 0 2px 8px var(--shadow-medium);
+}

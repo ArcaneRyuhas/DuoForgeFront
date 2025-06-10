@@ -4,7 +4,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: white;
+    background-color: var(--bg-secondary);
     z-index: 1000;
     display: flex;
     flex-direction: column;
@@ -16,8 +16,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    border-bottom: 2px solid #e9ecef;
-    background-color: #f8f9fa;
+    border-bottom: 2px solid var(--accent-primary);
+    background-color: var(--bg-secondary);
     min-height: 60px;
 }
 
@@ -25,12 +25,12 @@
     margin: 0 0 4px 0;
     font-size: 18px;
     font-weight: 600;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .file-meta {
     font-size: 12px;
-    color: #6c757d;
+    color: var(--text-primary);
 }
 
 .unsaved-indicator {
@@ -55,50 +55,50 @@
 }
 
 .edit-btn {
-    background-color: #007bff;
-    color: white;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
 .edit-btn:hover {
-    background-color: #0056b3;
+    background-color: var(--bg-secondary);
 }
 
 .save-btn {
-    background-color: #28a745;
-    color: white;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
 .save-btn:hover:not(:disabled) {
-    background-color: #1e7e34;
+    background-color: var(--bg-secondary);
 }
 
 .save-btn:disabled {
-    background-color: #6c757d;
+    background-color: var(--bg-secondary);
     cursor: not-allowed;
 }
 
 .cancel-btn {
-    background-color: #6c757d;
-    color: white;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
 .cancel-btn:hover {
-    background-color: #545b62;
+    background-color: var(--bg-secondary);
 }
 
 .delete-btn {
-    background-color: #dc3545;
-    color: white;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
     padding: 8px 10px;
 }
 
 .delete-btn:hover {
-    background-color: #c82333;
+    background-color: var(--bg-secondary);
 }
 
 .close-btn {
-    background-color: transparent;
-    color: #6c757d;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
     font-size: 24px;
     font-weight: bold;
     padding: 4px 8px;
@@ -106,8 +106,8 @@
 }
 
 .close-btn:hover {
-    background-color: #e9ecef;
-    color: #333;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 .file-editor-content {
@@ -126,19 +126,19 @@
     font-size: 14px;
     line-height: 1.6;
     resize: none;
-    background-color: #fafafa;
-    color: #333;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 .content-editor:focus {
-    background-color: white;
+    background-color: var(--bg-secondary);
 }
 
 .content-viewer {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
-    background-color: #fafafa;
+    background-color: var(--bg-secondary);
 }
 
 .content-viewer pre {
@@ -148,7 +148,7 @@
     line-height: 1.6;
     white-space: pre-wrap;
     word-wrap: break-word;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .editor-stats {
@@ -156,17 +156,17 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 20px;
-    background-color: #f8f9fa;
-    border-top: 1px solid #e9ecef;
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--accent-primary);
     font-size: 12px;
-    color: #6c757d;
+    color: var(--text-primary);
     flex-wrap: wrap;
     gap: 16px;
 }
 
 .keyboard-shortcuts {
     font-style: italic;
-    color: #495057;
+    color: var(--text-primary);
 }
 
 .loading {
@@ -181,8 +181,8 @@
 .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid #e9ecef;
-    border-top: 4px solid #007bff;
+    border: 4px solid var(--accent-primary);
+    border-top: 4px solid var(--accent-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -202,14 +202,14 @@
 }
 
 .error-message {
-    color: #dc3545;
+    color: var(--text-primary);
     font-size: 16px;
     text-align: center;
     margin: 0;
 }
 
 .retry-btn {
-    background-color: #007bff;
+    background-color: var(--bg-secondary);
     color: white;
     padding: 8px 16px;
     border: none;
@@ -219,7 +219,7 @@
 }
 
 .retry-btn:hover {
-    background-color: #0056b3;
+    background-color: var(--bg-secondary);
 }
 
 /* Responsive design */
