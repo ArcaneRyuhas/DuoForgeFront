@@ -8,7 +8,23 @@ export function useMessageHandler(artifactStage, generationStage, user, getFileB
     const [isWaitingResponse, setIsWaitingResponse] = useState(false);
     const [disabledModifyIndexes, setDisabledModifyIndexes] = useState([]);
 
-    const sendMessage = useCallback((text, sender, files =[], isError= false) => {
+    const isValidationErrorMessage = (message) => {
+        if (!message || typeof message !== 'string') return false;
+        
+        const validationErrorPatterns = [
+            /requirement cannot be empty/i,
+            /requirement is too short/i,
+            /requirement is too long/i,
+            /please provide more details/i,
+            /keep it under \d+ characters/i,
+            /validation service error/i,
+            /please rewrite.*requirements.*more robust/i
+        ];
+        
+        return validationErrorPatterns.some(pattern => pattern.test(message));
+    };
+
+    const sendMessage = useCallback((text, sender, files = [], isError = false) => {
         const useMarkdown = shouldUseMarkdownForResponse(
             artifactStage,
             generationStage,
@@ -25,8 +41,8 @@ export function useMessageHandler(artifactStage, generationStage, user, getFileB
             timestamp: Date.now(),
             isMarkdown: useMarkdown,
             forceCodeRendering: artifactStage == ArtifactStages.Code && sender == 'bot', 
-            files: files || [], 
-            isError: isError
+            files: files || [],
+            isError: isError 
         };
 
         setMessages(prevMessages => [...prevMessages, messageObject]);
@@ -165,17 +181,18 @@ export function useMessageHandler(artifactStage, generationStage, user, getFileB
             if (parsedResponse && typeof parsedResponse.is_valid === 'boolean') {
                 if (!parsedResponse.is_valid) {
                     const validationMessage = parsedResponse.jira_stories || "Please rewrite your requirements to make them more robust.";
-                    sendMessage(validationMessage, 'bot');
+                    sendMessage(validationMessage, 'bot', [], true); 
                 } else {
                     sendMessage(parsedResponse.jira_stories, 'bot');
                 }
             } else {
                 const responseText = parsedResponse.jira_stories || response;
-                sendMessage(responseText, 'bot');
+                const isValidationError = isValidationErrorMessage(responseText);
+                sendMessage(responseText, 'bot', [], isValidationError);
             }
         } catch (error) {
             console.error('Error processing request:', error);
-            sendMessage("Sorry, there was an error processing your request. Please re-write your requirements.", 'bot');
+            sendMessage("Sorry, there was an error processing your request.", 'bot', [], true); // Mark as error
         } finally {
             setIsWaitingResponse(false);
         }

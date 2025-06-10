@@ -11,7 +11,6 @@ const ChatContainer = ({
     disabledModifyIndexes, 
     shouldDisableButtons,
     artifactStage,
-    generationStage,
     isWaitingResponse
 }) => {
 
@@ -90,9 +89,7 @@ const ChatContainer = ({
         );
     };
 
-    // Enhanced markdown detection logic
     const shouldUseMarkdownForMessage = (message) => {
-        // Check if message has explicit markdown flags
         if (message.hasOwnProperty('useMarkdown')) {
             return message.useMarkdown;
         }
@@ -100,14 +97,47 @@ const ChatContainer = ({
             return message.isMarkdown;
         }
         
-        // Use ContentAnalyzer's enhanced detection
         return shouldRenderAsMarkdown(message.text);
+    };
+
+    const isErrorMessage = (message) => {
+        if (message.isError) {
+            return true;
+        }
+
+        const errorPatterns = [
+            /sorry.*error.*processing.*request/i,
+            /please rewrite.*requirements.*more robust/i,
+            /error.*occurred/i,
+            /failed.*process/i,
+            /unable.*complete/i,
+            /requirement cannot be empty/i,
+            /requirement is too short/i,
+            /requirement is too long/i,
+            /please provide more details/i,
+            /keep it under \d+ characters/i,
+            /validation service error/i
+        ];
+        
+        return errorPatterns.some(pattern => pattern.test(message.text));
+    };
+
+    const shouldShowButtons = (message, messageIndex) => {
+        return (
+            message.sender === 'bot' &&
+            messageIndex === lastBotMessageIndex && 
+            !disabledModifyIndexes.includes(messageIndex) &&
+            !shouldDisableButtons && 
+            !isWaitingResponse &&
+            !isErrorMessage(message) 
+        );
     };
 
     return (
         <div className="chat-container">
             {messages.map((m, i) => {
                 const useMarkdown = shouldUseMarkdownForMessage(m);
+                const showButtons = shouldShowButtons(m, i);
 
                  return (
                     <div key={i} className={`chat-bubble ${m.sender}`} style={{ 
@@ -131,22 +161,14 @@ const ChatContainer = ({
                             )}
                         </div>
                         
-                        {m.sender === 'bot' &&
-                         i === lastBotMessageIndex && 
-                         !disabledModifyIndexes.includes(i) &&
-                         !shouldDisableButtons && 
-                         !isWaitingResponse && (
+                        {showButtons && (
                             <div className="chat-actions" style={{ marginTop: '10px' }}>
                                 <button onClick={() => onModify && onModify(i)}>Modify</button>
                                 <button onClick={() => onContinue && onContinue(i)}>Continue</button>
                             </div>
                         )}
-                        {m.sender === 'bot' &&
-                         i === lastBotMessageIndex &&
-                         !disabledModifyIndexes.includes(i) &&
-                         !shouldDisableButtons &&
-                         !isWaitingResponse &&
-                         artifactStage === 'Documentation' && (
+                        
+                        {showButtons && artifactStage === 'Documentation' && (
                             <div className="chat-actions" style={{ marginTop: '10px' }}>
                                 <button onClick={() => {
                                     if (onUploadToJira) onUploadToJira(i);
