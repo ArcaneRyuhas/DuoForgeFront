@@ -77,6 +77,8 @@ const Main = ({ user }) => {
 
     const mainContainerRef = useAutoScroll(messages);
 
+    
+
     const handleSend = async (message, fileIds = []) => {
         const selectedFiles = fileIds.map(fileId => {
             const file = getFileById(fileId);
@@ -167,6 +169,7 @@ const Main = ({ user }) => {
                     onModify={handleModify}
                     onContinue={handleContinueWithIndex}
                     onUploadToJira={handleOpenJiraModal}
+                    currentInput={inputValue}
                     disabledModifyIndexes={disabledModifyIndexes}
                     shouldDisableButtons={shouldDisableButtons}
                     artifactStage={artifactStage}

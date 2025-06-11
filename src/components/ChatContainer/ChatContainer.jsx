@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import './ChatContainer.css';
 import MarkdownRenderer from '../MarkDownRenderer/markdownRenderer1';
 import { shouldRenderAsMarkdown } from '../RenderUtils/contentAnalyzers';
+import { GenerationStages } from '../../constants/artifactStages'; 
 
 const ChatContainer = ({ 
     messages, 
@@ -11,7 +12,9 @@ const ChatContainer = ({
     disabledModifyIndexes, 
     shouldDisableButtons,
     artifactStage,
-    isWaitingResponse
+    generationStage, 
+    isWaitingResponse, 
+    currentInput = ''
 }) => {
 
     const [persistedDiagrams, setPersistedDiagrams] = useState(new Map());
@@ -133,6 +136,98 @@ const ChatContainer = ({
         );
     };
 
+    const isBotWaitingForInput = () => {
+        return generationStage === GenerationStages.Modifying || 
+               generationStage === GenerationStages.WaitingForInput ||
+               (!isWaitingResponse && !generationStage); 
+    };
+
+    const shouldRequireInput = () => {
+        console.log('Debug shouldRequireInput:', {
+            generationStage,
+            isWaitingResponse,
+            artifactStage
+        });
+        
+        if (isWaitingResponse) {
+            console.log('Bot is waiting for response, input not required');
+            return false;
+        }
+        
+        const lastBotMessage = messages
+            .slice()
+            .reverse()
+            .find(m => m.sender === 'bot');
+        
+        console.log('Last bot message:', lastBotMessage?.text);
+        
+        if (!lastBotMessage) {
+            console.log('No bot message found, requiring input');
+            return true;
+        }
+        
+        const askingForInputPatterns = [
+            /what.*would you like/i,
+            /what.*do you want/i,
+            /what.*type/i,
+            /please specify/i,
+            /what changes/i,
+            /let's set up/i,
+            /how do you want/i,
+            /tell me/i,
+            /describe/i,
+            /\?/, 
+        ];
+        
+        const isAskingForInput = askingForInputPatterns.some(pattern => {
+            const matches = pattern.test(lastBotMessage.text);
+            if (matches) console.log('Question pattern matched:', pattern);
+            return matches;
+        });
+        
+        console.log('Is asking for input:', isAskingForInput);
+        
+        const botJustGeneratedContent = [
+            /here.*diagram/i,
+            /here.*code/i,
+            /generated.*diagram/i,
+            /created.*diagram/i,
+            /story.*created/i,
+            /upload.*completed/i,
+        ].some(pattern => pattern.test(lastBotMessage.text));
+        
+        if (botJustGeneratedContent && !isAskingForInput) {
+            console.log('Bot just generated content, input not required');
+            return false;
+        }
+        
+        return isAskingForInput;
+    };
+
+    const handleContinueClick = (messageIndex) => {
+        if (shouldRequireInput() && (!currentInput || currentInput.trim() === '')) {
+            const confirm = window.confirm('You have not provided any input. Do you want to continue without input?');
+            if (!confirm) {
+                return;
+            }
+        }
+        if (onContinue) {
+            onContinue(messageIndex);
+        }
+    };
+
+    const handleModifyClick = (messageIndex) => {
+        if (shouldRequireInput() && (!currentInput || currentInput.trim() === '')) {
+            const confirm = window.confirm('You have not provided any input. Are you sure you want to skip this  step?');
+            if (!confirm) {
+                return;
+            }
+        }
+        if (onModify) {
+            onModify(messageIndex);
+        }
+    };
+
     return (
         <div className="chat-container">
             {messages.map((m, i) => {
@@ -163,8 +258,8 @@ const ChatContainer = ({
                         
                         {showButtons && (
                             <div className="chat-actions" style={{ marginTop: '10px' }}>
-                                <button onClick={() => onModify && onModify(i)}>Modify</button>
-                                <button onClick={() => onContinue && onContinue(i)}>Continue</button>
+                                <button onClick={() => handleModifyClick(i)}>Modify</button>
+                                <button onClick={() => handleContinueClick(i)}>Continue</button>
                             </div>
                         )}
                         
