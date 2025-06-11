@@ -1,17 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 import {
-    isMermaidDiagram,
     processMermaidDiagrams,
     validateAndCleanDiagram,
     convertMarkdownToHtml,
     svgToImageDataUrl
 } from '../RenderUtils/contentAnalyzers';
+import { set } from 'zod/v4';
 
 const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) => {
     const containerRef = useRef(null);
     const diagramCounter = useRef(0);
     const [diagramImages, setDiagramImages] = useState(persistedDiagrams || new Map());
+    const processedContentRef = useRef('');
+    const lastContentRef = useRef('');
 
     useEffect(() => {
         mermaid.initialize({
@@ -26,7 +28,6 @@ const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) =>
         });
     }, []);
 
-    // Sync with persistedDiagrams when it changes
     useEffect(() => {
         if (persistedDiagrams && persistedDiagrams.size > 0) {
             setDiagramImages(new Map(persistedDiagrams));
@@ -46,8 +47,7 @@ const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) =>
                 const element = document.getElementById(diagram.id);
                 if (element) {
                     console.log('Processing diagram:', diagram.id);
-                    
-                    // Check if we already have an image for this diagram content
+
                     if (diagramImages.has(diagram.content)) {
                         console.log('Using cached image for:', diagram.id);
                         element.innerHTML = `<img src="${diagramImages.get(diagram.content)}" alt="Mermaid Diagram" style="max-width: 100%; height: auto;" />`;
@@ -55,8 +55,7 @@ const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) =>
                     }
 
                     element.innerHTML = '';
-                    
-                    // Validate and clean the diagram content
+
                     let cleanContent;
                     try {
                         cleanContent = validateAndCleanDiagram(diagram.content);
@@ -68,7 +67,6 @@ const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) =>
                     const svgId = `${diagram.id}-svg`;
                     const { svg } = await mermaid.render(svgId, cleanContent);
                     
-                    // Temporarily add SVG to get dimensions and convert to image
                     element.innerHTML = svg;
                     const svgElement = element.querySelector('svg');
                     
@@ -77,12 +75,9 @@ const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) =>
                             const imageDataUrl = await svgToImageDataUrl(svgElement);
                             newImages.set(diagram.content, imageDataUrl);
                             console.log('Converted to image successfully:', diagram.id);
-                            
-                            // Replace SVG with image
                             element.innerHTML = `<img src="${imageDataUrl}" alt="Mermaid Diagram" style="max-width: 100%; height: auto;" />`;
                         } catch (imgError) {
                             console.warn('Failed to convert SVG to image:', imgError);
-                            // Keep the SVG if image conversion fails
                         }
                     }
                 }
@@ -114,8 +109,6 @@ const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) =>
         
         if (newImages.size > diagramImages.size) {
             setDiagramImages(newImages);
-            
-            // Notify parent component about rendered diagrams
             if (onDiagramsRendered) {
                 const imageMap = {};
                 newImages.forEach((imageUrl, content) => {
@@ -126,37 +119,37 @@ const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) =>
         }
     };
 
-    const { processedContent, diagrams } = processMermaidDiagrams(content, diagramCounter);
-    
-    // Replace diagram placeholders with cached images if available
-    let htmlContent = processedContent;
-    diagrams.forEach(diagram => {
-        if (diagramImages.has(diagram.content)) {
-            const imageHtml = `<img src="${diagramImages.get(diagram.content)}" alt="Mermaid Diagram" style="max-width: 100%; height: auto;" />`;
-            htmlContent = htmlContent.replace(
-                `<div class="mermaid-diagram" id="${diagram.id}" data-diagram-content="${encodeURIComponent(diagram.content)}"></div>`,
-                `<div class="mermaid-diagram" id="${diagram.id}">${imageHtml}</div>`
-            );
-        }
-    });
-    
-    htmlContent = convertMarkdownToHtml(htmlContent);
+    if (!content) return null;
 
-    useEffect(() => {
+    if(content!== lastContentRef.current) {
+
+        const { processedContent, diagrams } = processMermaidDiagrams(content, diagramCounter);
+        let htmlContent = processedContent;
+        diagrams.forEach(diagram => {
+            if (diagramImages .has(diagram.content)){
+                const imageHtml = `<img src="${diagramImages.get(diagram.content)}" alt="Mermaid Diagram" style="max-width: 100%; height: auto;" />`;
+                htmlContent = htmlContent.replace(
+                    `<div class="mermaid-diagram" id="${diagram.id}" data-diagram-content="${encodeURIComponent(diagram.content)}"></div>`,
+                    `<div class="mermaid-diagram" id="${diagram.id}">${imageHtml}</div>`
+                );
+            }
+        });
+        processedContentRef.current = convertMarkdownToHtml(htmlContent);
+        lastContentRef.current = content;
         if (diagrams.length > 0) {
-            const timer = setTimeout(() => {
+            setTimeout(() => {
                 renderMermaidDiagrams(diagrams);
             }, 100);
-            
-            return () => clearTimeout(timer);
         }
-    }, [content, diagrams.length]);
+    }
+
+ 
 
     return (
         <div
             ref={containerRef}
             className="markdown-renderer"
-            dangerouslySetInnerHTML={{ __html: htmlContent }}
+            dangerouslySetInnerHTML={{ __html: processedContentRef.current }}
             style={{
                 fontFamily: 'Arial, sans-serif',
                 lineHeight: '1.6',

@@ -87,7 +87,7 @@ const ChatContainer = ({
                 content={content} 
                 onDiagramsRendered={handleDiagramsRendered}
                 persistedDiagrams={persistedDiagrams}
-                key={`markdown-${messageIndex}-${artifactStage}`} 
+                key={`markdown-${messageIndex}`} 
             />
         );
     };
