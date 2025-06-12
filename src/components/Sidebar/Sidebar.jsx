@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import './Sidebar.css'
 import { assets } from '../../assets/assets';
 import jiraIntegration from '../../hooks/Jira/jiraIntegration';
-import JiraCredentialModal from '../JiraModal/JiraCredentialModal';
 import ThemeToggle from '../ThemeToggle/ThemeToggle';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -10,7 +9,6 @@ const Sidebar = () => {
   const [extended, setExtended] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showAppearanceMenu, setShowAppearanceMenu] = useState(false);
-  const [showJiraModal, setShowJiraModal] = useState(false);
   const [jiraStatus, setJiraStatus] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
 
@@ -32,6 +30,35 @@ const Sidebar = () => {
         const status = jiraIntegration.getConnectionStatus();
         setJiraStatus(status);
     }
+
+    const handleOAuthCallback = async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        
+        if (code && state && window.location.pathname === '/auth/jira/callback') {
+          setIsConnecting(true);
+          try {
+            const result = await jiraIntegration.handleOAuthCallback(code, state);
+            if (result.success) {
+              const status = jiraIntegration.getConnectionStatus();
+              setJiraStatus(status);
+              alert('Successfully connected to Jira via OAuth!');
+              // Limpiar la URL
+              window.history.replaceState({}, document.title, '/');
+            } else {
+              alert(`Failed to connect: ${result.message}`);
+            }
+          } catch (error) {
+            console.error('OAuth Error:', error);
+            alert(`OAuth Error: ${error.message}`);
+          } finally {
+            setIsConnecting(false);
+          }
+        }
+      };
+
+    handleOAuthCallback();
   }, []);
 
   useEffect(() => {
@@ -73,34 +100,27 @@ const Sidebar = () => {
     setShowSettingsMenu(false);
   }
 
-  const handleJiraConnection = async (formData) => {
+  const handleJiraOAuthConnection = async () => {
     setIsConnecting(true);
     try {
-        const result = await jiraIntegration.connectToJira(
-            formData.domain,
-            formData.email,
-            formData.api_token
-        );
-        if (result.success){
-            const status = jiraIntegration.getConnectionStatus();
-            setJiraStatus(status);
-            setShowJiraModal(false);
-            alert('Succesfully connected to Jira!');
-        } else {
-            alert (`Failed to connect: ${result.message}`);
-        }
+      const result = await jiraIntegration.initiateOAuthFlow();
+      if (result.success) {
+        window.location.href = result.authUrl;
+      } else {
+        alert(`Failed to initiate OAuth: ${result.message}`);
+        setIsConnecting(false);
+      }
     } catch (error) {
-        alert(`Error: ${error.message}`);
-    } finally {
-        setIsConnecting(false)
+      alert(`OAuth Error: ${error.message}`);
+      setIsConnecting(false);
     }
   };
 
-  const handleJiraDisconnect =()=> {
+  const handleJiraDisconnect = () => {
     const result = jiraIntegration.disconnect();
     if (result.success){
         setJiraStatus(null);
-        alert('Disconnect from Jira succesfully');
+        alert('Disconnected from Jira successfully');
     }
     setShowSettingsMenu(false);
   };
@@ -139,6 +159,31 @@ const Sidebar = () => {
     saveProjectName(projectId);
   };
 
+  const getJiraStatusText = () => {
+    if (!jiraStatus) return 'Connect to Jira';
+    if (isConnecting) return 'Connecting...';
+    
+    const authType = jiraStatus.isOAuth ? 'OAuth' : 'API Token';
+    return `Disconnect Jira (${authType})`;
+  };
+
+  const getJiraStatusSubtext = () => {
+    if (!jiraStatus) return null;
+    
+    const domain = jiraStatus.domain?.replace('https://', '') || 'Unknown domain';
+    const email = jiraStatus.email || 'Unknown user';
+    
+    return (
+      <div className="jira-status-info">
+        <small>{email}</small>
+        <small>{domain}</small>
+        {jiraStatus.isOAuth && jiraStatus.expiresAt && (
+          <small>Expires: {new Date(jiraStatus.expiresAt).toLocaleDateString()}</small>
+        )}
+      </div>
+    );
+  };
+
   const settingsMenuItems = [
         {
             label: 'Account',
@@ -155,8 +200,11 @@ const Sidebar = () => {
         },
         { type: 'separator' },
         {
-            label: jiraStatus ? 'Disconnect from Jira' : 'Link InfyCode to Jira Account',
-            action: jiraStatus ? handleJiraDisconnect : () => setShowJiraModal(true)
+            label: getJiraStatusText(),
+            action: jiraStatus ? handleJiraDisconnect : handleJiraOAuthConnection,
+            disabled: isConnecting,
+            subtext: getJiraStatusSubtext(),
+            isJiraItem: true
         }
     ];
 
@@ -230,23 +278,32 @@ return (
                                                         return (
                                                                 <div
                                                                         key={index}
-                                                                        className="settings-menu-item"
+                                                                        className={`settings-menu-item ${item.disabled ? 'disabled' : ''} ${item.isJiraItem ? 'jira-item' : ''}`}
                                                                         onClick={() => {
-                                                                                item.action();
-                                                                                if (!item.label.includes('Jira') && !item.hasSubmenu) {
-                                                                                        setShowSettingsMenu(false);
+                                                                                if (!item.disabled) {
+                                                                                        item.action();
+                                                                                        if (!item.hasSubmenu) {
+                                                                                                setShowSettingsMenu(false);
+                                                                                        }
                                                                                 }
                                                                         }}
                                                                         style={{ position: 'relative' }}
                                                                 >
-                                                                        <span>{item.label}</span>
-                                                                        {item.shortcut && (
-                                                                                <span className="settings-menu-shortcut">
-                                                                                        {item.shortcut}
-                                                                                </span>
-                                                                        )}
-                                                                        {item.hasSubmenu && (
-                                                                                <span className="settings-menu-arrow">▶</span>
+                                                                        <div className="settings-menu-item-content">
+                                                                                <span className="settings-menu-label">{item.label}</span>
+                                                                                {item.shortcut && (
+                                                                                        <span className="settings-menu-shortcut">
+                                                                                                {item.shortcut}
+                                                                                        </span>
+                                                                                )}
+                                                                                {item.hasSubmenu && (
+                                                                                        <span className="settings-menu-arrow">▶</span>
+                                                                                )}
+                                                                        </div>
+                                                                        {item.subtext && (
+                                                                                <div className="settings-menu-subtext">
+                                                                                        {item.subtext}
+                                                                                </div>
                                                                         )}
                                                                         {item.hasSubmenu && showAppearanceMenu && (
                                                                                 <div
@@ -283,11 +340,6 @@ return (
                                 )}
                         </div>
                 </div> 
-                <JiraCredentialModal 
-                        isOpen={showJiraModal}
-                        onClose={() => setShowJiraModal(false)}
-                        onSubmit={handleJiraConnection}
-                />
         </div>
 )
 }

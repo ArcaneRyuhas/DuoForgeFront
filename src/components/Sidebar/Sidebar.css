@@ -203,3 +203,79 @@
     flex: 1;
     font-weight: 500;
 }
+
+.settings-menu-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.settings-menu-item.disabled:hover {
+    background-color: transparent;
+}
+
+.settings-menu-item.jira-item {
+    padding: 8px 12px;
+}
+
+.settings-menu-item-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.settings-menu-label {
+    flex: 1;
+}
+
+.settings-menu-subtext {
+    margin-top: 4px;
+    padding-left: 0;
+}
+
+.jira-status-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.jira-status-info small {
+    font-size: 11px;
+    opacity: 0.7;
+    color: var(--text-secondary, #666);
+}
+
+[data-theme="dark"] .jira-status-info small {
+    color: var(--text-secondary-dark, #aaa);
+}
+
+.settings-menu-item.jira-item.connecting {
+    position: relative;
+}
+
+.settings-menu-item.jira-item.connecting::after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.settings-menu-item.jira-item.connected {
+    border-left: 3px solid #00875a;
+}
+
+.settings-menu-item.jira-item.connected .settings-menu-label::before {
+    content: '●';
+    color: #00875a;
+    margin-right: 6px;
+    font-size: 12px;
+}
