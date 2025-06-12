@@ -225,26 +225,55 @@ export const convertMarkdownToHtml = (text) => {
 };
 
 // SVG to Image Data URL Conversion
-export const svgToImageDataUrl = (svgElement) => {
+export const svgToImageDataUrl = (svgElement, scaleFactor= 2) => {
     return new Promise((resolve, reject) => {
         try {
-            const svgData = new XMLSerializer().serializeToString(svgElement);
+            const clonedSvg = svgElement.cloneNode(true);
+
+            const bbox = svgElement.getBBox();
+            const originalWidth = bbox.width || svgElement.clientWidth || 800;
+            const originalHeight = bbox.height || svgElement.clientHeight || 600;
+
+            clonedSvg.setAttribute('width', originalWidth);
+            clonedSvg.setAttribute('height', originalHeight);
+            clonedSvg.setAttribute('viewBox', `0 0 ${originalWidth} ${originalHeight}`);
+
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('width', '100%');
+            rect.setAttribute('height', '100%');
+            rect.setAttribute('fill', 'white');
+            clonedSvg.insertBefore(rect, clonedSvg.firstChild);
+            
+            const svgData = new XMLSerializer().serializeToString(clonedSvg);
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = new Image();
 
             img.onload = () => {
-                canvas.width = img.width;
-                canvas.height = img.height;
+
+                const scaledWidth = originalWidth * scaleFactor;
+                const scaledHeight = originalHeight * scaleFactor;
+                canvas.width = scaledWidth;
+                canvas.height = scaledHeight;
+
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+
                 ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0);
-                resolve(canvas.toDataURL('image/png'));
+                ctx.fillRect(0, 0, scaledWidth, scaledHeight);
+
+                ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+                resolve(canvas.toDataURL('image/png', 1.0));
             };
 
-            img.onerror = reject;
-            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+            img.onerror = (error) => {
+                console.error('Error loading image:', error);
+                reject(error);
+            }
+            const encodedSvgData = btoa(unescape(encodeURIComponent(svgData)));
+            img.src = `data:image/svg+xml;base64, ${encodedSvgData}`;
         } catch (error) {
+            console.error('SVG conversion error:', error);
             reject(error);
         }
     });

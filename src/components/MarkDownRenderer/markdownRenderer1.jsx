@@ -6,7 +6,6 @@ import {
     convertMarkdownToHtml,
     svgToImageDataUrl
 } from '../RenderUtils/contentAnalyzers';
-import { set } from 'zod/v4';
 
 const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) => {
     const containerRef = useRef(null);
@@ -20,10 +19,40 @@ const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) =>
             startOnLoad: false,
             theme: 'default',
             securityLevel: 'loose',
-            fontFamily: 'Arial, sans-serif', 
+            fontFamily: 'Arial, sans-serif',
+            fontSize: 16, // Increased font size
             flowchart: {
                 useMaxWidth: true,
-                htmlLabels: true
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 20 // Increased padding
+            },
+            sequence: {
+                diagramMarginX: 50,
+                diagramMarginY: 30,
+                actorMargin: 50,
+                width: 150,
+                height: 65,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 35
+            },
+            gantt: {
+                gridLineStartPadding: 350,
+                fontSize: 14,
+                sectionFontSize: 16
+            },
+            class: {
+                titleTopMargin: 25
+            },
+            git: {
+                mainBranchName: 'main'
+            },
+            // Enhanced rendering settings
+            themeVariables: {
+                fontSize: '16px',
+                fontFamily: 'Arial, sans-serif'
             }
         });
     }, []);
@@ -50,7 +79,7 @@ const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) =>
 
                     if (diagramImages.has(diagram.content)) {
                         console.log('Using cached image for:', diagram.id);
-                        element.innerHTML = `<img src="${diagramImages.get(diagram.content)}" alt="Mermaid Diagram" style="max-width: 100%; height: auto;" />`;
+                        element.innerHTML = `<img src="${diagramImages.get(diagram.content)}" alt="Mermaid Diagram" style="max-width: 100%; height: auto; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />`;
                         continue;
                     }
 
@@ -67,17 +96,43 @@ const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) =>
                     const svgId = `${diagram.id}-svg`;
                     const { svg } = await mermaid.render(svgId, cleanContent);
                     
-                    element.innerHTML = svg;
-                    const svgElement = element.querySelector('svg');
+                    // Create a temporary container to properly handle the SVG
+                    const tempContainer = document.createElement('div');
+                    tempContainer.innerHTML = svg;
+                    const svgElement = tempContainer.querySelector('svg');
                     
                     if (svgElement) {
+                        // Set explicit dimensions for better rendering
+                        const bbox = svgElement.getBBox();
+                        const width = Math.max(bbox.width, 400);
+                        const height = Math.max(bbox.height, 250);
+                        
+                        svgElement.setAttribute('width', width);
+                        svgElement.setAttribute('height', height);
+                        svgElement.setAttribute('viewBox', `0 0 ${width} ${height}`);
+                        
+                        // First display the SVG
+                        element.innerHTML = svg;
+                        
                         try {
-                            const imageDataUrl = await svgToImageDataUrl(svgElement);
+                            // Convert to high-quality image with 2x scale factor
+                            const imageDataUrl = await svgToImageDataUrl(svgElement, 2);
                             newImages.set(diagram.content, imageDataUrl);
-                            console.log('Converted to image successfully:', diagram.id);
-                            element.innerHTML = `<img src="${imageDataUrl}" alt="Mermaid Diagram" style="max-width: 100%; height: auto;" />`;
+                            console.log('Converted to high-quality image successfully:', diagram.id);
+                            
+                            // Replace with the high-quality image
+                            element.innerHTML = `<img src="${imageDataUrl}" alt="Mermaid Diagram" style="
+                                max-width: 100%; 
+                                height: auto; 
+                                image-rendering: -webkit-optimize-contrast; 
+                                image-rendering: crisp-edges;
+                                min-width: 300px;
+                                min-height: 200px;
+                                object-fit: contain;
+                            " />`;
                         } catch (imgError) {
-                            console.warn('Failed to convert SVG to image:', imgError);
+                            console.warn('Failed to convert SVG to image, keeping SVG:', imgError);
+                            // Keep the SVG if conversion fails
                         }
                     }
                 }
@@ -119,31 +174,37 @@ const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) =>
         }
     };
 
-    if (!content) return null;
-
-    if(content!== lastContentRef.current) {
-
+    if (content !== lastContentRef.current) {
         const { processedContent, diagrams } = processMermaidDiagrams(content, diagramCounter);
         let htmlContent = processedContent;
+        
         diagrams.forEach(diagram => {
-            if (diagramImages .has(diagram.content)){
-                const imageHtml = `<img src="${diagramImages.get(diagram.content)}" alt="Mermaid Diagram" style="max-width: 100%; height: auto;" />`;
+            if (diagramImages.has(diagram.content)) {
+                const imageHtml = `<img src="${diagramImages.get(diagram.content)}" alt="Mermaid Diagram" style="
+                    max-width: 100%; 
+                    height: auto; 
+                    image-rendering: -webkit-optimize-contrast; 
+                    image-rendering: crisp-edges;
+                    min-width: 300px;
+                    min-height: 200px;
+                    object-fit: contain;
+                " />`;
                 htmlContent = htmlContent.replace(
                     `<div class="mermaid-diagram" id="${diagram.id}" data-diagram-content="${encodeURIComponent(diagram.content)}"></div>`,
                     `<div class="mermaid-diagram" id="${diagram.id}">${imageHtml}</div>`
                 );
             }
         });
+        
         processedContentRef.current = convertMarkdownToHtml(htmlContent);
         lastContentRef.current = content;
+        
         if (diagrams.length > 0) {
             setTimeout(() => {
                 renderMermaidDiagrams(diagrams);
             }, 100);
         }
     }
-
- 
 
     return (
         <div

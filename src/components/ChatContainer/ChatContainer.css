@@ -4,10 +4,11 @@
     flex: 1;
     padding: 1rem;
     overflow-y: auto;
+    overflow-x: auto;
 }
 
 .chat-bubble {
-    max-width: 70%;
+    max-width: 85%;
     margin-bottom: 0.5rem;
     padding: 0.6rem 1rem;
     border-radius: 1rem;
@@ -216,32 +217,6 @@
     margin-top: 2px;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-    .chat-bubble {
-        max-width: 85%;
-        padding: 0.5rem 0.8rem;
-    }
-    
-    .chat-container {
-        padding: 0.5rem;
-    }
-    
-    .chat-actions {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .chat-actions button {
-        width: 100%;
-    }
-}
-
-/* Your existing ChatContainer styles go here */
-
-/* Add this section for Mermaid diagram support */
-
-/* Mermaid diagram container styles */
 .mermaid-diagram {
     margin: 20px 0;
     padding: 15px;
@@ -250,6 +225,9 @@
     border-radius: 8px;
     text-align: center;
     overflow-x: auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    margin: none;
 }
 
 /* Mermaid error styles */
@@ -264,10 +242,29 @@
 }
 
 /* Override default Mermaid styles if needed */
+.mermaid-diagram img {
+    max-width: 100%;
+    height: auto;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    filter: none;
+    object-fit: contain;
+    min-width: 300 px;
+    min-height: 200px;
+
+}
+
 .mermaid-diagram svg {
     max-width: 100%;
     height: auto;
+    min-width: 400px;
+    min-height: 250px;
+    shape-rendering: geometricPrecision;
+    text-rendering: optimizeLegibility;
 }
+
 
 /* Ensure Mermaid diagrams fit well within chat bubbles */
 .chat-bubble .mermaid-diagram {
@@ -279,6 +276,14 @@
 .chat-bubble.bot .mermaid-diagram {
     background-color: rgba(255, 255, 255, 0.95);
     border-color: #d1d5da;
+    margin: 15px -5px;
+    padding: 25px;
+    border-radius: 8px;
+}
+
+.chat-bubble.bot:has(.mermaid-diagram) {
+    max-width: 90%; 
+    padding: 1rem 1.2rem;
 }
 
 /* User message specific Mermaid styling (if needed) */
@@ -306,9 +311,62 @@
 }
 
 /* Responsive design for diagrams */
+
+@media (max-width: 1200px) {
+    .chat-bubble.bot:has(.mermaid-diagram) {
+        max-width: 95%;
+    }
+    
+    .mermaid-diagram img {
+        min-width: 280px;
+        min-height: 180px;
+    }
+    
+    .mermaid-diagram svg {
+        min-width: 350px;
+        min-height: 200px;
+    }
+}
 @media (max-width: 768px) {
+    .chat-bubble {
+        max-width: 95%; /* Increased for mobile */
+        padding: 0.5rem 0.8rem;
+    }
+    
+    .chat-bubble.bot:has(.mermaid-diagram) {
+        max-width: 98%;
+        padding: 0.8rem;
+    }
+    
+    .chat-container {
+        padding: 0.5rem;
+    }
+    
     .mermaid-diagram {
-        margin: 10px 0;
-        padding: 8px;
+        margin: 15px -10px;
+        padding: 15px;
+        border-radius: 8px;
+    }
+    
+    .mermaid-diagram img {
+        min-width: 250px;
+        min-height: 150px;
+    }
+    
+    .mermaid-diagram svg {
+        min-width: 280px;
+        min-height: 160px;
+    }
+}
+
+@media (max-width: 480px) {
+    .mermaid-diagram img {
+        min-width: 220px;
+        min-height: 130px;
+    }
+    
+    .mermaid-diagram svg {
+        min-width: 250px;
+        min-height: 140px;
     }
 }
