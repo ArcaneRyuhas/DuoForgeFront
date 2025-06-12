@@ -47,7 +47,7 @@ export function useStageTransitions(
         console.log('Artifact stage advanced to:', artifactStage);
         if (shouldShowStageMessage && stageMessageType === 'continue') {
             if (artifactStage === ArtifactStages.Diagram) {
-                sendMessage("What type of diagram do you want me to generate?. Press continue to skip this step and move to code generation.", 'bot');
+                sendMessage("What type of diagram do you want me to generate? Press continue to skip this step and move to code generation.", 'bot');
             } else if (artifactStage === ArtifactStages.Code) {
                 sendMessage("Let's set up your project! Please specify how do you want:<br><br>• <b>Frontend</b>: React, Vue, Angular, or other. <br>• <b>Backend</b>: Python, Java, Node.js, or other.<br>• <b>Database</b>: MySQL, PostgreSQL, MongoDB, or other.<br>• <b>Deployment</b>: AWS, Azure, Google Cloud, or local.<br> Press <b>continue</b> if you want to skip this step.", 'bot');
             } else if (artifactStage === ArtifactStages.Conversation) {
