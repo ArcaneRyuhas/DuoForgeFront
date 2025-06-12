@@ -87,7 +87,7 @@ const ChatContainer = ({
                 content={content} 
                 onDiagramsRendered={handleDiagramsRendered}
                 persistedDiagrams={persistedDiagrams}
-                key={`markdown-${messageIndex}`} 
+                key={`markdown-${messageIndex}-${artifactStage}`} 
             />
         );
     };
@@ -136,12 +136,45 @@ const ChatContainer = ({
         );
     };
 
+    // Helper function to check if bot is asking for initial setup/configuration
+    const isBotAskingForSetup = (message) => {
+        if (!message || message.sender !== 'bot') return false;
+        
+        const setupPatterns = [
+            /what type.*diagram.*do you want/i,
+            /let's set up.*project/i,
+            /please specify.*how do you want/i,
+            /what.*frontend/i,
+            /what.*backend/i,
+            /what.*database/i,
+            /what.*deployment/i,
+        ];
+        
+        return setupPatterns.some(pattern => pattern.test(message.text));
+    };
+
+    // Helper function to determine which buttons to show
+    const getButtonsToShow = (message, messageIndex) => {
+        if (!shouldShowButtons(message, messageIndex)) {
+            return { showModify: false, showContinue: false };
+        }
+        
+        const isSetupQuestion = isBotAskingForSetup(message);
+        
+        return {
+            showModify: !isSetupQuestion, 
+            showContinue: true 
+        };
+    };
+
+    // Helper function to determine if bot is waiting for user input
     const isBotWaitingForInput = () => {
         return generationStage === GenerationStages.Modifying || 
-               generationStage === GenerationStages.WaitingForInput ||
+               generationStage === GenerationStages.WaitingForInput || 
                (!isWaitingResponse && !generationStage); 
     };
 
+    
     const shouldRequireInput = () => {
         console.log('Debug shouldRequireInput:', {
             generationStage,
@@ -176,7 +209,7 @@ const ChatContainer = ({
             /how do you want/i,
             /tell me/i,
             /describe/i,
-            /\?/, 
+            /\?/,  
         ];
         
         const isAskingForInput = askingForInputPatterns.some(pattern => {
@@ -186,6 +219,7 @@ const ChatContainer = ({
         });
         
         console.log('Is asking for input:', isAskingForInput);
+        
         
         const botJustGeneratedContent = [
             /here.*diagram/i,
@@ -218,7 +252,7 @@ const ChatContainer = ({
 
     const handleModifyClick = (messageIndex) => {
         if (shouldRequireInput() && (!currentInput || currentInput.trim() === '')) {
-            const confirm = window.confirm('You have not provided any input. Are you sure you want to skip this  step?');
+            const confirm = window.confirm('You have not provided any input. Do you want to continue without input?');
             if (!confirm) {
                 return;
             }
@@ -232,7 +266,7 @@ const ChatContainer = ({
         <div className="chat-container">
             {messages.map((m, i) => {
                 const useMarkdown = shouldUseMarkdownForMessage(m);
-                const showButtons = shouldShowButtons(m, i);
+                const buttonsConfig = getButtonsToShow(m, i);
 
                  return (
                     <div key={i} className={`chat-bubble ${m.sender}`} style={{ 
@@ -256,14 +290,18 @@ const ChatContainer = ({
                             )}
                         </div>
                         
-                        {showButtons && (
+                        {(buttonsConfig.showModify || buttonsConfig.showContinue) && (
                             <div className="chat-actions" style={{ marginTop: '10px' }}>
-                                <button onClick={() => handleModifyClick(i)}>Modify</button>
-                                <button onClick={() => handleContinueClick(i)}>Continue</button>
+                                {buttonsConfig.showModify && (
+                                    <button onClick={() => handleModifyClick(i)}>Modify</button>
+                                )}
+                                {buttonsConfig.showContinue && (
+                                    <button onClick={() => handleContinueClick(i)}>Continue</button>
+                                )}
                             </div>
                         )}
                         
-                        {showButtons && artifactStage === 'Documentation' && (
+                        {(buttonsConfig.showModify || buttonsConfig.showContinue) && artifactStage === 'Documentation' && (
                             <div className="chat-actions" style={{ marginTop: '10px' }}>
                                 <button onClick={() => {
                                     if (onUploadToJira) onUploadToJira(i);
