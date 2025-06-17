@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import Home from "./components/Home/Home";
 import Dashboard from "./components/Dashboard/Dashboard";
+import JiraOAuthCallback from "./routers/jirarouter";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
 function App() {
@@ -38,6 +39,16 @@ function App() {
                 <Navigate to="/" />
               )
             }
+          />
+          {/* Jira OAuth callback route - accessible without authentication */}
+          <Route
+            path="/jira/callback"
+            element={<JiraOAuthCallback />}
+          />
+          {/* Alternative route if you prefer to match backend default */}
+          <Route
+            path="/auth/jira/callback"
+            element={<JiraOAuthCallback />}
           />
         </Routes>
       </Router>
