@@ -264,55 +264,50 @@ const ChatContainer = ({
 
     return (
         <div className="chat-container">
-            {messages.map((m, i) => {
-                const useMarkdown = shouldUseMarkdownForMessage(m);
-                const buttonsConfig = getButtonsToShow(m, i);
+            <div className="chat-messages-wrapper">
+                {messages.map((m, i) => {
+                    const useMarkdown = shouldUseMarkdownForMessage(m);
+                    const buttonsConfig = getButtonsToShow(m, i);
 
-                 return (
-                    <div key={i} className={`chat-bubble ${m.sender}`} style={{ 
-                        backgroundColor: m.sender === 'bot' ? '#f0f0f0' : '#007bff',
-                        color: m.sender === 'bot' ? '#333' : 'white',
-                        padding: '1rem',
-                        margin: '0.5rem',
-                        borderRadius: '0.5rem',
-                        minHeight: '50px'
-                    }}>
-                        {m.files && m.files.length > 0 && (
-                            <div className="message-files" style={{ marginBottom: '8px' }}>
-                                {m.files.map(renderFilePreview)}
+                    return (
+                        <div key={i} className={`chat-bubble ${m.sender}`}>
+                            {m.files && m.files.length > 0 && (
+                                <div className="message-files">
+                                    {m.files.map(renderFilePreview)}
+                                </div>
+                            )}
+                            <div>
+                                {useMarkdown ? (
+                                    <EnhancedMarkdownRenderer content={m.text} messageIndex={i} />
+                                ) : (
+                                    <div>{m.text}</div>
+                                )}
                             </div>
-                        )}
-                        <div>
-                            {useMarkdown ? (
-                                <EnhancedMarkdownRenderer content={m.text} messageIndex={i} />
-                            ) : (
-                                <div>{m.text}</div>
+                            
+                            {(buttonsConfig.showModify || buttonsConfig.showContinue) && (
+                                <div className="chat-actions" style={{ marginTop: '10px' }}>
+                                    {buttonsConfig.showModify && (
+                                        <button onClick={() => handleModifyClick(i)}>Modify</button>
+                                    )}
+                                    {buttonsConfig.showContinue && (
+                                        <button onClick={() => handleContinueClick(i)}>Continue</button>
+                                    )}
+                                </div>
+                            )}
+                            
+                            {(buttonsConfig.showModify || buttonsConfig.showContinue) && artifactStage === 'Documentation' && (
+                                <div className="chat-actions" style={{ marginTop: '10px' }}>
+                                    <button onClick={() => {
+                                        if (onUploadToJira) onUploadToJira(i);
+                                    }}>
+                                        Upload to Jira
+                                    </button>
+                                </div>
                             )}
                         </div>
-                        
-                        {(buttonsConfig.showModify || buttonsConfig.showContinue) && (
-                            <div className="chat-actions" style={{ marginTop: '10px' }}>
-                                {buttonsConfig.showModify && (
-                                    <button onClick={() => handleModifyClick(i)}>Modify</button>
-                                )}
-                                {buttonsConfig.showContinue && (
-                                    <button onClick={() => handleContinueClick(i)}>Continue</button>
-                                )}
-                            </div>
-                        )}
-                        
-                        {(buttonsConfig.showModify || buttonsConfig.showContinue) && artifactStage === 'Documentation' && (
-                            <div className="chat-actions" style={{ marginTop: '10px' }}>
-                                <button onClick={() => {
-                                    if (onUploadToJira) onUploadToJira(i);
-                                }}>
-                                    Upload to Jira
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                );
-            })}
+                    );
+                })}
+            </div>
         </div>
     );
 };

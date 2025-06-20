@@ -6,14 +6,17 @@
 }
 
 .search-input-row {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: space-between;
     gap: 20px;
     background-color: #f0f0f0; 
     padding: 10px 20px;
     border-radius: 50px;
+    transition: margin-left 0.3s ease, width 0.3s ease;
+
 }
+
 
 .uploaded-files-display {
     padding: 8px 12px;

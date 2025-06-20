@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Main.css';
 import SearchBox from '../SearchBox/SearchBox';
 import Nav from '../Nav/Nav';
@@ -25,9 +25,7 @@ import {
 //Constants
 import { ArtifactStages } from '../../constants/artifactStages';
 
-
-
-const Main = ({ user }) => {
+const Main = ({ user, currentProject, onProjectUpdate }) => {
     const [inputValue, setInputValue] = useState('');
     const [selectedFileIds, setSelectedFileIds] = useState([]);
     const [showJiraModal, setShowJiraModal] = useState(false);
@@ -64,7 +62,8 @@ const Main = ({ user }) => {
         disabledModifyIndexes,
         setDisabledModifyIndexes,
         sendMessage,
-        handleSendMessage
+        handleSendMessage,
+        setMessages // Add this to your useMessageHandler hook
     } = useMessageHandler(artifactStage, generationStage, user, getFileById, isFileProcessed);
 
     const { handleModify, handleContinue } = useStageTransitions(
@@ -77,7 +76,32 @@ const Main = ({ user }) => {
 
     const mainContainerRef = useAutoScroll(messages);
 
-    
+    // Load project's chat history when project changes
+    useEffect(() => {
+        if (currentProject) {
+            console.log('Loading project chat history:', currentProject.chatHistory);
+            setMessages(currentProject.chatHistory || []);
+        } else {
+            setMessages([]);
+        }
+    }, [currentProject?.id, setMessages]);
+
+    // Save messages to project when they change
+    useEffect(() => {
+        if (currentProject && messages.length > 0) {
+            const updatedProject = {
+                ...currentProject,
+                chatHistory: messages,
+                lastModified: new Date().toISOString()
+            };
+            
+            // Only update if messages actually changed
+            if (JSON.stringify(currentProject.chatHistory) !== JSON.stringify(messages)) {
+                console.log('Saving messages to project:', messages);
+                onProjectUpdate(updatedProject);
+            }
+        }
+    }, [messages, currentProject, onProjectUpdate]);
 
     const handleSend = async (message, fileIds = []) => {
         const selectedFiles = fileIds.map(fileId => {
@@ -90,10 +114,10 @@ const Main = ({ user }) => {
         setSelectedFileIds([]);
         
         if (fileIds.length > 0) {
-        fileIds.forEach(fileId => {
-            removeFiles(fileId);
-        });
-    }
+            fileIds.forEach(fileId => {
+                removeFiles(fileId);
+            });
+        }
 
         await handleSendMessage(message, fileIds);
     };
@@ -155,6 +179,20 @@ const Main = ({ user }) => {
     const greetingText = getGreetingText(artifactStage);
     const bottomInfoText = getBottomInfoText(artifactStage, isWaitingResponse, () => currentActionDescription);
 
+    if (!currentProject) {
+        return (
+            <div className="main">
+                <Nav />
+                <div className="main-container">
+                    <div className="greet">
+                        <p><span>Select a project</span></p>
+                        <p><span>Choose a project from the sidebar to start chatting</span></p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="main">
             <Nav />
@@ -162,6 +200,7 @@ const Main = ({ user }) => {
                 <div className="greet">
                     <p><span>Hello!</span></p>
                     <p><span>{greetingText}</span></p>
+                    <p><span>Project: {currentProject.name}</span></p>
                 </div>
 
                 <ChatContainer

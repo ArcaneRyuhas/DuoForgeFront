@@ -198,12 +198,13 @@ export function useMessageHandler(artifactStage, generationStage, user, getFileB
         }
         }, [artifactStage, generationStage, user, disableButtons, sendMessage, prepareFileContent, getFileById, isFileProcessed]);
     
-        return {
+    return {
         messages,
         isWaitingResponse,
         disabledModifyIndexes,
         setDisabledModifyIndexes,
         sendMessage,
+        setMessages, // ADD THIS LINE - it was missing
         handleSendMessage
     };
 }

@@ -1,11 +1,11 @@
 .sidebar{
-    min-height: 100vh;
-    max-height: 100vh;
+    height: 100vh;
     display: inline-flex;
     flex-direction: column;
     justify-content: space-between;
     background-color: var(--bg-tertiary);
     padding: 25px 15px;
+    flex-shrink: 0;
 }
 
 .sidebar img{
@@ -55,10 +55,175 @@
     border-radius: 50px;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    position: relative;
 }
 
 .sidebar .recent-entry:hover{
     background-color: var(--bg-secondary); 
+}
+
+/* Project-specific styles */
+.sidebar .project-entry {
+    padding: 12px 10px;
+    margin-bottom: 4px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.sidebar .project-entry:hover {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+.sidebar .project-entry.active-project {
+    background-color: var(--primary-bg, rgba(59, 130, 246, 0.1));
+    border-color: var(--primary-color, #3b82f6);
+}
+
+.sidebar .project-entry.active-project:hover {
+    background-color: var(--primary-bg-hover, rgba(59, 130, 246, 0.15));
+}
+
+.sidebar .project-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0; /* Allows text truncation */
+}
+
+.sidebar .project-name-editable {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.sidebar .project-last-modified {
+    font-size: 11px;
+    color: var(--text-secondary, #888);
+    opacity: 0.7;
+}
+
+.sidebar .project-name-input {
+    background: var(--input-bg, var(--bg-primary));
+    border: 1px solid var(--border-color, #333);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+    width: 100%;
+    font-family: inherit;
+}
+
+.sidebar .project-name-input:focus {
+    border-color: var(--primary-color, #3b82f6);
+    box-shadow: 0 0 0 2px var(--primary-color-alpha, rgba(59, 130, 246, 0.2));
+}
+
+.sidebar .project-options-wrapper {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    position: relative;
+}
+
+.sidebar .project-entry:hover .project-options-wrapper {
+    opacity: 1;
+}
+
+.sidebar .project-options-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary, #888);
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 16px;
+    line-height: 1;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.sidebar .project-options-btn:hover {
+    background-color: var(--hover-bg, rgba(255, 255, 255, 0.1));
+    color: var(--text-primary);
+}
+
+.sidebar .project-options-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color, #333);
+    border-radius: 8px;
+    padding: 4px 0;
+    min-width: 120px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    margin-top: 4px;
+}
+
+.sidebar .project-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-primary);
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sidebar .project-option:hover {
+    background-color: var(--hover-bg, rgba(255, 255, 255, 0.1));
+}
+
+.sidebar .project-option.delete-option {
+    color: var(--danger-color, #ef4444);
+}
+
+.sidebar .project-option.delete-option:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+.sidebar .project-option-separator {
+    height: 1px;
+    background-color: var(--border-color, #333);
+    margin: 4px 0;
+}
+
+/* Loading state for new projects */
+.sidebar .project-entry.creating {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.sidebar .project-entry.creating::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    border: 2px solid transparent;
+    border-top: 2px solid var(--primary-color, #3b82f6);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 
 .sidebar .bottom{
@@ -144,7 +309,6 @@
 .sidebar .bottom-item.settings-item:hover p {
     opacity: 0.8;
 }
-
 
 .appearance-dropdown {
     position: absolute;

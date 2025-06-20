@@ -5,7 +5,7 @@ import jiraIntegration from '../../hooks/Jira/jiraIntegration';
 import ThemeToggle from '../ThemeToggle/ThemeToggle';
 import { useTheme } from '../../contexts/ThemeContext';
 
-const Sidebar = () => {
+const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate }) => {
   const [extended, setExtended] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showAppearanceMenu, setShowAppearanceMenu] = useState(false);
@@ -14,17 +14,28 @@ const Sidebar = () => {
 
   const { theme, toggleTheme } = useTheme();
 
-  const [projects, setprojects] = useState([
-    {id: 1, name: 'Unnamed project'}
-  ])
+  const [projects, setProjects] = useState([
+    {
+      id: 1, 
+      name: 'Unnamed project',
+      createdAt: new Date().toISOString(),
+      lastModified: new Date().toISOString(),
+      chatHistory: [],
+      jiraStories: [],
+      diagrams: []
+    }
+  ]);
+  const [activeProjectId, setActiveProjectId] = useState(1);
   const [editingProjectId, setEditingProjectId] = useState(null);
   const [tempProjectName, setTempProjectName] = useState('');
+  const [showProjectOptions, setShowProjectOptions] = useState(null);
 
   const settingsMenuRef = useRef(null);
   const appearanceMenuRef = useRef(null);
   const editInputRef = useRef(null);
+  const projectOptionsRef = useRef(null);
 
-  useEffect (() => {
+  useEffect(() => {
     const isConnected = jiraIntegration.isJiraConnected();
     if (isConnected) {
         const status = jiraIntegration.getConnectionStatus();
@@ -44,7 +55,6 @@ const Sidebar = () => {
               const status = jiraIntegration.getConnectionStatus();
               setJiraStatus(status);
               alert('Successfully connected to Jira via OAuth!');
-              // Limpiar la URL
               window.history.replaceState({}, document.title, '/');
             } else {
               alert(`Failed to connect: ${result.message}`);
@@ -69,6 +79,9 @@ const Sidebar = () => {
         if (appearanceMenuRef.current && !appearanceMenuRef.current.contains(event.target)){
             setShowAppearanceMenu(false);
         }
+        if (projectOptionsRef.current && !projectOptionsRef.current.contains(event.target)){
+            setShowProjectOptions(null);
+        }
     }; 
     document.addEventListener('mousedown', handleClicksOutside);
     return() => {
@@ -76,16 +89,107 @@ const Sidebar = () => {
     };
   }, []);
 
-  useEffect (() => {
+  useEffect(() => {
     if (editingProjectId && editInputRef.current) {
         editInputRef.current.focus();
         editInputRef.current.select();
     }
   }, [editingProjectId]);
 
+  // Notify parent component when active project changes
+  useEffect(() => {
+    if (onProjectChange && activeProjectId) {
+      const activeProject = projects.find(p => p.id === activeProjectId);
+      onProjectChange(activeProject);
+    }
+  }, [activeProjectId, projects, onProjectChange]);
+
+  // Function to handle project updates from Main component
+  const handleProjectUpdate = (updatedProject) => {
+    setProjects(prev => prev.map(project => 
+      project.id === updatedProject.id ? updatedProject : project
+    ));
+  };
+
+  // Pass this function to parent so Main can call it
+  useEffect(() => {
+    if (onProjectUpdate) {
+      onProjectUpdate(handleProjectUpdate);
+    }
+  }, [onProjectUpdate]);
+
+  const createNewProject = () => {
+    const newProject = {
+      id: Date.now(), // Simple ID generation
+      name: `Project ${projects.length + 1}`,
+      createdAt: new Date().toISOString(),
+      lastModified: new Date().toISOString(),
+      chatHistory: [],
+      jiraStories: [],
+      diagrams: []
+    };
+    
+    setProjects(prev => [...prev, newProject]);
+    setActiveProjectId(newProject.id);
+    
+    // Auto-start editing the new project name
+    setTimeout(() => {
+      startEditingProject(newProject.id, newProject.name);
+    }, 100);
+  };
+
+  const switchToProject = (projectId) => {
+    setActiveProjectId(projectId);
+    // Update last modified time
+    setProjects(prev => prev.map(project => 
+      project.id === projectId 
+        ? { ...project, lastModified: new Date().toISOString() }
+        : project
+    ));
+  };
+
+  const duplicateProject = (projectId) => {
+    const projectToDuplicate = projects.find(p => p.id === projectId);
+    if (!projectToDuplicate) return;
+
+    const duplicatedProject = {
+      ...projectToDuplicate,
+      id: Date.now(),
+      name: `${projectToDuplicate.name} (Copy)`,
+      createdAt: new Date().toISOString(),
+      lastModified: new Date().toISOString(),
+      // Keep the chat history and other data but make them independent
+      chatHistory: [...projectToDuplicate.chatHistory],
+      jiraStories: [...projectToDuplicate.jiraStories],
+      diagrams: [...projectToDuplicate.diagrams]
+    };
+
+    setProjects(prev => [...prev, duplicatedProject]);
+    setActiveProjectId(duplicatedProject.id);
+    setShowProjectOptions(null);
+  };
+
+  const deleteProject = (projectId) => {
+    if (projects.length <= 1) {
+      alert("You can't delete the last project. Create a new one first.");
+      return;
+    }
+
+    if (window.confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
+      setProjects(prev => prev.filter(p => p.id !== projectId));
+      
+      // If we're deleting the active project, switch to another one
+      if (activeProjectId === projectId) {
+        const remainingProjects = projects.filter(p => p.id !== projectId);
+        setActiveProjectId(remainingProjects[0]?.id || null);
+      }
+    }
+    setShowProjectOptions(null);
+  };
+
   const handleSettingsClick = () => {
     setShowSettingsMenu(!showSettingsMenu);
-    setShowAppearanceMenu(false); // Close appearance menu when settings menu opens
+    setShowAppearanceMenu(false);
   }
 
   const handleAppearanceClick = () => {
@@ -128,13 +232,14 @@ const Sidebar = () => {
   const startEditingProject = (projectId, currentName) => {
     setEditingProjectId(projectId);
     setTempProjectName(currentName);
+    setShowProjectOptions(null);
   }
 
   const saveProjectName = (projectId) => {
     if (tempProjectName.trim()){
-        setprojects(projects.map(project => 
+        setProjects(projects.map(project => 
             project.id === projectId
-            ?{...project, name: tempProjectName.trim()}
+            ? { ...project, name: tempProjectName.trim(), lastModified: new Date().toISOString() }
             : project
         ));
     }
@@ -157,6 +262,11 @@ const Sidebar = () => {
 
   const handleInputBlur = (projectId) => {
     saveProjectName(projectId);
+  };
+
+  const handleProjectOptionsClick = (e, projectId) => {
+    e.stopPropagation();
+    setShowProjectOptions(showProjectOptions === projectId ? null : projectId);
   };
 
   const getJiraStatusText = () => {
@@ -184,6 +294,19 @@ const Sidebar = () => {
     );
   };
 
+  const formatProjectDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+    if (diffInMinutes < 10080) return `${Math.floor(diffInMinutes / 1440)}d ago`;
+    
+    return date.toLocaleDateString();
+  };
+
   const settingsMenuItems = [
         {
             label: 'Account',
@@ -208,140 +331,192 @@ const Sidebar = () => {
         }
     ];
 
-return (
-        <div className={`sidebar ${extended ? 'extended' : ''}`}>
-                <div className="top">
-                        <img onClick={()=>setExtended(prev=>!prev)} className='menu' src={assets.menu_icon} alt='menu icon'/>
-                        <div className="new-chat">
-                                <img src={assets.plus_icon} alt='expand icon' style={{filter: 'hue-rotate(200deg)'}}/>
-                                {extended ? <p>New Project</p> : null}
-                        </div>
-                        {extended ? 
-                        <div className="recent">
-                                <p className="recent-title">Recent</p>
-                                {projects.map(project => (
-                                        <div key={project.id} className="recent-entry">
-                                                <img src={assets.message_icon} alt='message icon' style={{ filter: 'hue-rotate(100deg)' }}/>
-                                                {editingProjectId === project.id ? (
-                                                        <input
-                                                                ref={editInputRef}
-                                                                type="text"
-                                                                value={tempProjectName}
-                                                                onChange={(e) => setTempProjectName(e.target.value)}
-                                                                onKeyDown={(e) => handleKeyPress(e, project.id)}
-                                                                onBlur ={() => handleInputBlur(project.id)}
-                                                                className = "projec-name-input"
-                                                                maxLength={100}
-                                                        />
-                                                ): (
-                                                        <p
-                                                                onDoubleClick={()=> startEditingProject(project.id, project.name)}
-                                                                className="project-name-editable"
-                                                                title="Double click to edit the project name"
-                                                        >
-                                                                {project.name}
-                                                        </p>
-                                                )}
-                                        </div>
-                                ))}
-                        </div>
-                        :null}
-                </div>
-                <div className="bottom">
-                        <div className="bottom-item recent-entry">
-                                <img src={assets.question_icon} alt='question icon'/>
-                                {extended ? <p>Help</p> : null}
-                        </div>
-                        <div className="bottom-item recent-entry settings-item" style={{ position: 'relative' }}>
-                                <img 
-                                        src={assets.setting_icon} 
-                                        alt='settings icon'
-                                        onClick={handleSettingsClick}
-                                />
-                                {extended ? <p onClick={handleSettingsClick}>Settings</p> : null }
+  // Sort projects by last modified (most recent first)
+  const sortedProjects = [...projects].sort((a, b) => 
+    new Date(b.lastModified) - new Date(a.lastModified)
+  );
 
-                                {showSettingsMenu && (
-                                        <div 
-                                                ref={settingsMenuRef}
-                                                className="settings-dropdown"
-                                        >
-                                                {settingsMenuItems.map((item, index) => {
-                                                        if (item.type === 'separator') {
-                                                                return (
-                                                                        <div 
-                                                                                key={index} 
-                                                                                className="settings-menu-separator"
-                                                                        />
-                                                                );
-                                                        }
-
-                                                        return (
-                                                                <div
-                                                                        key={index}
-                                                                        className={`settings-menu-item ${item.disabled ? 'disabled' : ''} ${item.isJiraItem ? 'jira-item' : ''}`}
-                                                                        onClick={() => {
-                                                                                if (!item.disabled) {
-                                                                                        item.action();
-                                                                                        if (!item.hasSubmenu) {
-                                                                                                setShowSettingsMenu(false);
-                                                                                        }
-                                                                                }
-                                                                        }}
-                                                                        style={{ position: 'relative' }}
-                                                                >
-                                                                        <div className="settings-menu-item-content">
-                                                                                <span className="settings-menu-label">{item.label}</span>
-                                                                                {item.shortcut && (
-                                                                                        <span className="settings-menu-shortcut">
-                                                                                                {item.shortcut}
-                                                                                        </span>
-                                                                                )}
-                                                                                {item.hasSubmenu && (
-                                                                                        <span className="settings-menu-arrow">▶</span>
-                                                                                )}
-                                                                        </div>
-                                                                        {item.subtext && (
-                                                                                <div className="settings-menu-subtext">
-                                                                                        {item.subtext}
-                                                                                </div>
-                                                                        )}
-                                                                        {item.hasSubmenu && showAppearanceMenu && (
-                                                                                <div
-                                                                                        ref={appearanceMenuRef}
-                                                                                        className="appearance-dropdown"
-                                                                                        style={{
-                                                                                                position: 'absolute',
-                                                                                                top: 0,
-                                                                                                left: '100%',
-                                                                                                marginLeft: '8px',
-                                                                                                zIndex: 1000
-                                                                                        }}
-                                                                                >
-                                                                                        <div
-                                                                                                className={`appearance-menu-item ${theme === 'light' ? 'active' : ''}`}
-                                                                                                onClick={() => handleThemeChange('light')}
-                                                                                        >
-                                                                                                <span className="label">Light mode</span>
-                                                                                                {theme === 'light' && <span className="checkmark">✓</span>}
-                                                                                        </div>
-                                                                                        <div
-                                                                                                className={`appearance-menu-item ${theme === 'dark' ? 'active' : ''}`}
-                                                                                                onClick={() => handleThemeChange('dark')}
-                                                                                        >
-                                                                                                <span className="label">Dark mode</span>
-                                                                                                {theme === 'dark' && <span className="checkmark">✓</span>}
-                                                                                        </div>
-                                                                                </div>
-                                                                        )}
-                                                                </div>
-                                                        );
-                                                })}
-                                        </div>
-                                )}
-                        </div>
-                </div> 
+  return (
+    <div className={`sidebar ${extended ? 'extended' : ''}`}>
+      <div className="top">
+        <img onClick={() => setExtended(prev => !prev)} className='menu' src={assets.menu_icon} alt='menu icon'/>
+        <div className="new-chat" onClick={createNewProject}>
+          <img src={assets.plus_icon} alt='expand icon' style={{filter: 'hue-rotate(200deg)'}}/>
+          {extended ? <p>New Project</p> : null}
         </div>
-)
+        {extended ? 
+        <div className="recent">
+          <p className="recent-title">Projects</p>
+          {sortedProjects.map(project => (
+            <div 
+              key={project.id} 
+              className={`recent-entry project-entry ${activeProjectId === project.id ? 'active-project' : ''}`}
+              onClick={() => switchToProject(project.id)}
+            >
+              <img src={assets.message_icon} alt='message icon' style={{ filter: 'hue-rotate(100deg)' }}/>
+              <div className="project-content">
+                {editingProjectId === project.id ? (
+                  <input
+                    ref={editInputRef}
+                    type="text"
+                    value={tempProjectName}
+                    onChange={(e) => setTempProjectName(e.target.value)}
+                    onKeyDown={(e) => handleKeyPress(e, project.id)}
+                    onBlur={() => handleInputBlur(project.id)}
+                    className="project-name-input"
+                    maxLength={100}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ): (
+                  <>
+                    <p
+                      onDoubleClick={() => startEditingProject(project.id, project.name)}
+                      className="project-name-editable"
+                      title="Double click to edit the project name"
+                    >
+                      {project.name}
+                    </p>
+                    <span className="project-last-modified">
+                      {formatProjectDate(project.lastModified)}
+                    </span>
+                  </>
+                )}
+              </div>
+              <div className="project-options-wrapper">
+                <button 
+                  className="project-options-btn"
+                  onClick={(e) => handleProjectOptionsClick(e, project.id)}
+                  title="Project options"
+                >
+                  ⋮
+                </button>
+                {showProjectOptions === project.id && (
+                  <div 
+                    ref={projectOptionsRef}
+                    className="project-options-menu"
+                  >
+                    <div 
+                      className="project-option"
+                      onClick={() => startEditingProject(project.id, project.name)}
+                    >
+                      <span>Rename</span>
+                    </div>
+                    <div 
+                      className="project-option"
+                      onClick={() => duplicateProject(project.id)}
+                    >
+                      <span>Duplicate</span>
+                    </div>
+                    <div className="project-option-separator"></div>
+                    <div 
+                      className="project-option delete-option"
+                      onClick={() => deleteProject(project.id)}
+                    >
+                      <span>Delete</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        : null}
+      </div>
+      <div className="bottom">
+        <div className="bottom-item recent-entry">
+          <img src={assets.question_icon} alt='question icon'/>
+          {extended ? <p>Help</p> : null}
+        </div>
+        <div className="bottom-item recent-entry settings-item" style={{ position: 'relative' }}>
+          <img 
+            src={assets.setting_icon} 
+            alt='settings icon'
+            onClick={handleSettingsClick}
+          />
+          {extended ? <p onClick={handleSettingsClick}>Settings</p> : null }
+
+          {showSettingsMenu && (
+            <div 
+              ref={settingsMenuRef}
+              className="settings-dropdown"
+            >
+              {settingsMenuItems.map((item, index) => {
+                if (item.type === 'separator') {
+                  return (
+                    <div 
+                      key={index} 
+                      className="settings-menu-separator"
+                    />
+                  );
+                }
+
+                return (
+                  <div
+                    key={index}
+                    className={`settings-menu-item ${item.disabled ? 'disabled' : ''} ${item.isJiraItem ? 'jira-item' : ''}`}
+                    onClick={() => {
+                      if (!item.disabled) {
+                        item.action();
+                        if (!item.hasSubmenu) {
+                          setShowSettingsMenu(false);
+                        }
+                      }
+                    }}
+                    style={{ position: 'relative' }}
+                  >
+                    <div className="settings-menu-item-content">
+                      <span className="settings-menu-label">{item.label}</span>
+                      {item.shortcut && (
+                        <span className="settings-menu-shortcut">
+                          {item.shortcut}
+                        </span>
+                      )}
+                      {item.hasSubmenu && (
+                        <span className="settings-menu-arrow">▶</span>
+                      )}
+                    </div>
+                    {item.subtext && (
+                      <div className="settings-menu-subtext">
+                        {item.subtext}
+                      </div>
+                    )}
+                    {item.hasSubmenu && showAppearanceMenu && (
+                      <div
+                        ref={appearanceMenuRef}
+                        className="appearance-dropdown"
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: '100%',
+                          marginLeft: '8px',
+                          zIndex: 1000
+                        }}
+                      >
+                        <div
+                          className={`appearance-menu-item ${theme === 'light' ? 'active' : ''}`}
+                          onClick={() => handleThemeChange('light')}
+                        >
+                          <span className="label">Light mode</span>
+                          {theme === 'light' && <span className="checkmark">✓</span>}
+                        </div>
+                        <div
+                          className={`appearance-menu-item ${theme === 'dark' ? 'active' : ''}`}
+                          onClick={() => handleThemeChange('dark')}
+                        >
+                          <span className="label">Dark mode</span>
+                          {theme === 'dark' && <span className="checkmark">✓</span>}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div> 
+    </div>
+  )
 }
 
 export default Sidebar;

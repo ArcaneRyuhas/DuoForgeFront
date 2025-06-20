@@ -35,12 +35,19 @@
 
 .main {
   flex: 1;
-  min-height: 100vh;
-  max-height: 100vh;
-  position: relative;
+  height: 100vh;
+  margin-left: 0;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.main.project-active{
+  display: flex;
+  flex-direction: column;
 }
 
 .main .nav {
@@ -50,6 +57,7 @@
   font-size: 22px;
   padding: 20px;
   color: var(--text-nav);
+  flex-shrink: 0;
 }
 
 .main .nav img {
@@ -58,14 +66,40 @@
 }
 
 .main-container {
-  max-height: 70vh;
-  max-width: 80vw;
-  margin: auto;
-  overflow: scroll;
-  min-height: 70vh;
-  min-width: 80vw;
-  overflow-x: hidden;
-  overflow-y: auto;
+  flex: 1;
+  width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.main.project-active .main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+
+.app-container{
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-content-wrapper{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height:100vh;
+}
+
+.dashboard{
+  display: flex;
+  height: 100vh;
+  overflow:hidden;
 }
 
 .main .greet {
@@ -148,14 +182,13 @@
 }
 
 .main-bottom {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%);
+  flex-shrink: 0;
+  position: relative;
   width: 100%;
-  max-width: 80vw;
   padding: 5px 20px;
-  margin: 0 auto;
+  margin: 0;
+  background-color: var(--bg-primary);
+  border-top: 1px solid var(--border-color);
 }
 
 .main .bottom-info {
