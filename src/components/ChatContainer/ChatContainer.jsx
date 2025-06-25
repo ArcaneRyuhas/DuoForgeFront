@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import './ChatContainer.css';
 import MarkdownRenderer from '../MarkDownRenderer/markdownRenderer1';
 import { shouldRenderAsMarkdown } from '../RenderUtils/contentAnalyzers';
@@ -87,7 +87,7 @@ const ChatContainer = ({
                 content={content} 
                 onDiagramsRendered={handleDiagramsRendered}
                 persistedDiagrams={persistedDiagrams}
-                key={`markdown-${messageIndex}-${artifactStage}`} 
+                key={`markdown-${messageIndex}`} 
             />
         );
     };

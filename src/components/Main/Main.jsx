@@ -89,19 +89,24 @@ const Main = ({ user, currentProject, onProjectUpdate }) => {
     // Save messages to project when they change
     useEffect(() => {
         if (currentProject && messages.length > 0) {
+            const currentChatHistory = currentProject.chatHistory|| [];
+
+            if(messages.length!== currentChatHistory.length || 
+                messages.some((msg, index) => {
+                    const existing = currentChatHistory[index];
+                    return !existing || existing.text !== msg.text || existing.sender !== msg.sender;
+                })) {
+                    console.log('Saving messages to project:', messages.length, 'messages');
+
             const updatedProject = {
                 ...currentProject,
-                chatHistory: messages,
+                chatHistory: [...messages],
                 lastModified: new Date().toISOString()
             };
-            
-            // Only update if messages actually changed
-            if (JSON.stringify(currentProject.chatHistory) !== JSON.stringify(messages)) {
-                console.log('Saving messages to project:', messages);
-                onProjectUpdate(updatedProject);
+            onProjectUpdate(updatedProject);
             }
         }
-    }, [messages, currentProject, onProjectUpdate]);
+    }, [messages, currentProject?.id]);
 
     const handleSend = async (message, fileIds = []) => {
         const selectedFiles = fileIds.map(fileId => {
