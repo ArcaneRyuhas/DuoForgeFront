@@ -1,9 +1,10 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
+import { ThemeProvider } from '../../contexts/ThemeContext';
 import Sidebar from "../Sidebar/Sidebar";
 import Main from "../Main/Main";
 import '../../index.css';
 
-const Dashboard = ({ user }) => {
+const Dashboard = ({ user, onLogout }) => {
     const [currentProject, setCurrentProject] = useState(null);
 
     const handleProjectChange = (project) => {
@@ -17,17 +18,20 @@ const Dashboard = ({ user }) => {
     };
 
     return (
-        <div className="dashboard">
-            <Sidebar 
-                onProjectChange={handleProjectChange}
-                currentProjectId={currentProject?.id}
-            />
-            <Main 
-                user={user} 
-                currentProject={currentProject}
-                onProjectUpdate={handleProjectUpdate}
-            />
-        </div>
+        <ThemeProvider>
+            <div className="dashboard">
+                <Sidebar
+                    onProjectChange={handleProjectChange}
+                    currentProjectId={currentProject?.id}
+                    onLogout={onLogout}
+                />
+                <Main
+                    user={user}
+                    currentProject={currentProject}
+                    onProjectUpdate={handleProjectUpdate}
+                />
+            </div>
+        </ThemeProvider>
     );
 };
 

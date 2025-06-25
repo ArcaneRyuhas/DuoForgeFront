@@ -1,9 +1,11 @@
 .sidebar{
     height: 100vh;
+    min-height: 100vh;
+    max-height: 100vh;
     display: inline-flex;
     flex-direction: column;
     justify-content: space-between;
-    background-color: var(--bg-tertiary);
+    background-color: var(--bg-tertiary, #f0f0f0);
     padding: 25px 15px;
     flex-shrink: 0;
 }
@@ -24,16 +26,17 @@
     align-items: center;
     gap: 10px;
     padding: 10px 15px;
-    background-color: var(--bg-secondary);
+    background-color: var(--bg-secondary, #bbd2f5);
     border-radius: 50px;
     font-size: 14px;
+    color: var(--text-color, #454546);
     cursor: pointer;
     width: 100%;
     transition: background-color 0.2s ease;
 }
 
 .sidebar .new-chat:hover {
-    background-color: var(--hover-bg);
+    background-color: var(--hover-bg, #e0e0e0);
 }
 
 .sidebar .recent{
@@ -53,13 +56,14 @@
     padding: 10px;
     padding-right: 40px;
     border-radius: 50px;
+    color: var(--text-color, #282828);
     cursor: pointer;
     transition: background-color 0.2s ease;
     position: relative;
 }
 
 .sidebar .recent-entry:hover{
-    background-color: var(--bg-secondary); 
+    background-color: var(--bg-secondary, #e0e0e0); 
 }
 
 /* Project-specific styles */
@@ -76,7 +80,7 @@
 }
 
 .sidebar .project-entry:hover {
-    background-color: var(--bg-secondary);
+    background-color: var(--bg-secondary, #e0e0e0);
     border-color: var(--border-color, rgba(255, 255, 255, 0.1));
 }
 
@@ -100,7 +104,7 @@
 .sidebar .project-name-editable {
     font-size: 14px;
     font-weight: 500;
-    color: var(--text-primary);
+    color: var(--text-primary, #282828);
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -115,12 +119,12 @@
 }
 
 .sidebar .project-name-input {
-    background: var(--input-bg, var(--bg-primary));
-    border: 1px solid var(--border-color, #333);
+    background: var(--input-bg, var(--bg-primary, #ffffff));
+    border: 1px solid var(--border-color, #ddd);
     border-radius: 6px;
     padding: 4px 8px;
     font-size: 14px;
-    color: var(--text-primary);
+    color: var(--text-primary, #282828);
     outline: none;
     width: 100%;
     font-family: inherit;
@@ -160,15 +164,15 @@
 
 .sidebar .project-options-btn:hover {
     background-color: var(--hover-bg, rgba(255, 255, 255, 0.1));
-    color: var(--text-primary);
+    color: var(--text-primary, #282828);
 }
 
 .sidebar .project-options-menu {
     position: absolute;
     top: 100%;
     right: 0;
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color, #333);
+    background-color: var(--bg-secondary, #e0e0e0);
+    border: 1px solid var(--border-color, #ddd);
     border-radius: 8px;
     padding: 4px 0;
     min-width: 120px;
@@ -181,7 +185,7 @@
     padding: 8px 12px;
     cursor: pointer;
     font-size: 13px;
-    color: var(--text-primary);
+    color: var(--text-primary, #282828);
     transition: background-color 0.2s ease;
     display: flex;
     align-items: center;
@@ -189,7 +193,7 @@
 }
 
 .sidebar .project-option:hover {
-    background-color: var(--hover-bg, rgba(255, 255, 255, 0.1));
+    background-color: var(--hover-bg, rgba(0, 0, 0, 0.05));
 }
 
 .sidebar .project-option.delete-option {
@@ -202,7 +206,7 @@
 
 .sidebar .project-option-separator {
     height: 1px;
-    background-color: var(--border-color, #333);
+    background-color: var(--border-color, #ddd);
     margin: 4px 0;
 }
 
@@ -239,15 +243,38 @@
 }
 
 .sidebar .bottom-item:hover {
-    background-color: var(--bg-secondary);
+    background-color: var(--bg-secondary, #e0e0e0);
+}
+
+/** Logout specific styles from second file **/
+.sidebar .logout-item {
+    border-top: 1px solid var(--border-color, #ddd);
+    margin-top: 10px;
+    padding-top: 15px;
+    color: var(--danger-color, #dc3545);
+    transition: all 0.3s ease;
+}
+
+.sidebar .logout-item:hover {
+    background-color: var(--danger-bg, #f8d7da);
+    color: var(--danger-color-hover, #721c24);
+}
+
+.sidebar .logout-item svg {
+    color: inherit;
+    transition: transform 0.3s ease;
+}
+
+.sidebar .logout-item:hover svg {
+    transform: translateX(2px);
 }
 
 .settings-dropdown {
     position: absolute;
     bottom: 100%;
     left: 0;
-    background-color: var(--bg-secondary);
-    border: 1px solid #bbd2f5;
+    background-color: var(--bg-secondary, #e0e0e0);
+    border: 1px solid var(--border-color, #bbd2f5);
     border-radius: 8px;
     min-width: 280px;
     padding: 8px 0;
@@ -272,26 +299,27 @@
     transition: background-color 0.2s ease;
     position: relative;
     min-height: 36px;
+    color: var(--text-primary, #282828);
 }
 
 .settings-menu-item:hover {
-    background-color: var(--bg-secondary) !important;
+    background-color: var(--hover-bg, rgba(0, 0, 0, 0.05)) !important;
 }
 
 .settings-menu-separator {
     height: 1px;
-    background-color: var(--bg-secondary);
+    background-color: var(--border-color, #ddd);
     margin: 8px 0;
 }
 
 .settings-menu-shortcut {
-    color: #858585;
+    color: var(--text-secondary, #858585);
     font-size: 11px;
     font-weight: normal;
 }
 
 .settings-menu-arrow {
-    color: #858585;
+    color: var(--text-secondary, #858585);
     font-size: 12px;
 }
 
@@ -315,8 +343,8 @@
     top: 0;
     left: 100%;
     margin-left: 8px;
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary, #e0e0e0);
+    border: 1px solid var(--border-color, #ddd);
     border-radius: 8px;
     padding: 8px 0;
     min-width: 180px;
@@ -339,24 +367,24 @@
     align-items: center;
     gap: 12px;
     font-size: 14px;
-    color: var(--text-color);
+    color: var(--text-color, #282828);
     transition: background-color 0.2s ease;
     min-height: 40px;
 }
 
 .appearance-menu-item:hover {
-    background-color: var(--hover-bg);
+    background-color: var(--hover-bg, rgba(0, 0, 0, 0.05));
 }
 
 .appearance-menu-item.active {
-    color: var(--primary-color);
-    background-color: var(--hover-bg);
+    color: var(--primary-color, #3b82f6);
+    background-color: var(--hover-bg, rgba(0, 0, 0, 0.05));
 }
 
 .appearance-menu-item .checkmark {
     margin-left: auto;
     font-weight: bold;
-    color: var(--primary-color);
+    color: var(--primary-color, #3b82f6);
 }
 
 .appearance-menu-item .emoji {

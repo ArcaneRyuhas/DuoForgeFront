@@ -5,7 +5,7 @@ import jiraIntegration from '../../hooks/Jira/jiraIntegration';
 import ThemeToggle from '../ThemeToggle/ThemeToggle';
 import { useTheme } from '../../contexts/ThemeContext';
 
-const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate }) => {
+const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate, onLogout }) => {
   const [extended, setExtended] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showAppearanceMenu, setShowAppearanceMenu] = useState(false);
@@ -16,7 +16,7 @@ const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate }) => {
 
   const [projects, setProjects] = useState([
     {
-      id: 1, 
+      id: 1,
       name: 'Unnamed project',
       createdAt: new Date().toISOString(),
       lastModified: new Date().toISOString(),
@@ -38,61 +38,61 @@ const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate }) => {
   useEffect(() => {
     const isConnected = jiraIntegration.isJiraConnected();
     if (isConnected) {
-        const status = jiraIntegration.getConnectionStatus();
-        setJiraStatus(status);
+      const status = jiraIntegration.getConnectionStatus();
+      setJiraStatus(status);
     }
 
     const handleOAuthCallback = async () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const state = urlParams.get('state');
-        
-        if (code && state && window.location.pathname === '/auth/jira/callback') {
-          setIsConnecting(true);
-          try {
-            const result = await jiraIntegration.handleOAuthCallback(code, state);
-            if (result.success) {
-              const status = jiraIntegration.getConnectionStatus();
-              setJiraStatus(status);
-              alert('Successfully connected to Jira via OAuth!');
-              window.history.replaceState({}, document.title, '/');
-            } else {
-              alert(`Failed to connect: ${result.message}`);
-            }
-          } catch (error) {
-            console.error('OAuth Error:', error);
-            alert(`OAuth Error: ${error.message}`);
-          } finally {
-            setIsConnecting(false);
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+
+      if (code && state && window.location.pathname === '/auth/jira/callback') {
+        setIsConnecting(true);
+        try {
+          const result = await jiraIntegration.handleOAuthCallback(code, state);
+          if (result.success) {
+            const status = jiraIntegration.getConnectionStatus();
+            setJiraStatus(status);
+            alert('Successfully connected to Jira via OAuth!');
+            window.history.replaceState({}, document.title, '/');
+          } else {
+            alert(`Failed to connect: ${result.message}`);
           }
+        } catch (error) {
+          console.error('OAuth Error:', error);
+          alert(`OAuth Error: ${error.message}`);
+        } finally {
+          setIsConnecting(false);
         }
-      };
+      }
+    };
 
     handleOAuthCallback();
   }, []);
 
   useEffect(() => {
     const handleClicksOutside = (event) => {
-        if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target)){
-            setShowSettingsMenu(false);
-        }
-        if (appearanceMenuRef.current && !appearanceMenuRef.current.contains(event.target)){
-            setShowAppearanceMenu(false);
-        }
-        if (projectOptionsRef.current && !projectOptionsRef.current.contains(event.target)){
-            setShowProjectOptions(null);
-        }
-    }; 
+      if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target)) {
+        setShowSettingsMenu(false);
+      }
+      if (appearanceMenuRef.current && !appearanceMenuRef.current.contains(event.target)) {
+        setShowAppearanceMenu(false);
+      }
+      if (projectOptionsRef.current && !projectOptionsRef.current.contains(event.target)) {
+        setShowProjectOptions(null);
+      }
+    };
     document.addEventListener('mousedown', handleClicksOutside);
-    return() => {
-        document.removeEventListener('mousedown', handleClicksOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClicksOutside)
     };
   }, []);
 
   useEffect(() => {
     if (editingProjectId && editInputRef.current) {
-        editInputRef.current.focus();
-        editInputRef.current.select();
+      editInputRef.current.focus();
+      editInputRef.current.select();
     }
   }, [editingProjectId]);
 
@@ -106,7 +106,7 @@ const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate }) => {
 
   // Function to handle project updates from Main component
   const handleProjectUpdate = (updatedProject) => {
-    setProjects(prev => prev.map(project => 
+    setProjects(prev => prev.map(project =>
       project.id === updatedProject.id ? updatedProject : project
     ));
   };
@@ -128,10 +128,10 @@ const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate }) => {
       jiraStories: [],
       diagrams: []
     };
-    
+
     setProjects(prev => [...prev, newProject]);
     setActiveProjectId(newProject.id);
-    
+
     // Auto-start editing the new project name
     setTimeout(() => {
       startEditingProject(newProject.id, newProject.name);
@@ -141,8 +141,8 @@ const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate }) => {
   const switchToProject = (projectId) => {
     setActiveProjectId(projectId);
     // Update last modified time
-    setProjects(prev => prev.map(project => 
-      project.id === projectId 
+    setProjects(prev => prev.map(project =>
+      project.id === projectId
         ? { ...project, lastModified: new Date().toISOString() }
         : project
     ));
@@ -177,7 +177,7 @@ const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate }) => {
 
     if (window.confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
       setProjects(prev => prev.filter(p => p.id !== projectId));
-      
+
       // If we're deleting the active project, switch to another one
       if (activeProjectId === projectId) {
         const remainingProjects = projects.filter(p => p.id !== projectId);
@@ -222,9 +222,18 @@ const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate }) => {
 
   const handleJiraDisconnect = () => {
     const result = jiraIntegration.disconnect();
-    if (result.success){
-        setJiraStatus(null);
-        alert('Disconnected from Jira successfully');
+    if (result.success) {
+      setJiraStatus(null);
+      alert('Disconnected from Jira successfully');
+    }
+    setShowSettingsMenu(false);
+  };
+
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to sign out?')) {
+      if (onLogout) {
+        onLogout();
+      }
     }
     setShowSettingsMenu(false);
   };
@@ -236,12 +245,12 @@ const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate }) => {
   }
 
   const saveProjectName = (projectId) => {
-    if (tempProjectName.trim()){
-        setProjects(projects.map(project => 
-            project.id === projectId
-            ? { ...project, name: tempProjectName.trim(), lastModified: new Date().toISOString() }
-            : project
-        ));
+    if (tempProjectName.trim()) {
+      setProjects(projects.map(project =>
+        project.id === projectId
+          ? { ...project, name: tempProjectName.trim(), lastModified: new Date().toISOString() }
+          : project
+      ));
     }
     setEditingProjectId(null);
     setTempProjectName('');
@@ -254,11 +263,11 @@ const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate }) => {
 
   const handleKeyPress = (e, projectId) => {
     if (e.key === 'Enter') {
-        saveProjectName(projectId);
+      saveProjectName(projectId);
     } else if (e.key === 'Escape') {
-        cancelEditing();
+      cancelEditing();
     }
-  }; 
+  };
 
   const handleInputBlur = (projectId) => {
     saveProjectName(projectId);
@@ -272,17 +281,17 @@ const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate }) => {
   const getJiraStatusText = () => {
     if (!jiraStatus) return 'Connect to Jira';
     if (isConnecting) return 'Connecting...';
-    
+
     const authType = jiraStatus.isOAuth ? 'OAuth' : 'API Token';
     return `Disconnect Jira (${authType})`;
   };
 
   const getJiraStatusSubtext = () => {
     if (!jiraStatus) return null;
-    
+
     const domain = jiraStatus.domain?.replace('https://', '') || 'Unknown domain';
     const email = jiraStatus.email || 'Unknown user';
-    
+
     return (
       <div className="jira-status-info">
         <small>{email}</small>
@@ -298,153 +307,163 @@ const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate }) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
     if (diffInMinutes < 10080) return `${Math.floor(diffInMinutes / 1440)}d ago`;
-    
+
     return date.toLocaleDateString();
   };
 
   const settingsMenuItems = [
-        {
-            label: 'Account',
-            action: () => console.log('Account')
-        },
-        {
-            label: 'People',
-            action: () => console.log('People')
-        },
-        {
-            label: 'Appearance',
-            action: handleAppearanceClick,
-            hasSubmenu: true
-        },
-        { type: 'separator' },
-        {
-            label: getJiraStatusText(),
-            action: jiraStatus ? handleJiraDisconnect : handleJiraOAuthConnection,
-            disabled: isConnecting,
-            subtext: getJiraStatusSubtext(),
-            isJiraItem: true
-        }
-    ];
+    {
+      label: 'Account',
+      action: () => console.log('Account')
+    },
+    {
+      label: 'People',
+      action: () => console.log('People')
+    },
+    {
+      label: 'Appearance',
+      action: handleAppearanceClick,
+      hasSubmenu: true
+    },
+    { type: 'separator' },
+    {
+      label: getJiraStatusText(),
+      action: jiraStatus ? handleJiraDisconnect : handleJiraOAuthConnection,
+      disabled: isConnecting,
+      subtext: getJiraStatusSubtext(),
+      isJiraItem: true
+    },
+    { type: 'separator' },
+    {
+      label: 'Sign Out',
+      action: handleLogout,
+      isLogoutItem: true
+    }
+  ];
 
   // Sort projects by last modified (most recent first)
-  const sortedProjects = [...projects].sort((a, b) => 
+  const sortedProjects = [...projects].sort((a, b) =>
     new Date(b.lastModified) - new Date(a.lastModified)
   );
 
   return (
     <div className={`sidebar ${extended ? 'extended' : ''}`}>
       <div className="top">
-        <img onClick={() => setExtended(prev => !prev)} className='menu' src={assets.menu_icon} alt='menu icon'/>
+        <img onClick={() => setExtended(prev => !prev)} className='menu' src={assets.menu_icon} alt='menu icon' />
         <div className="new-chat" onClick={createNewProject}>
-          <img src={assets.plus_icon} alt='expand icon' style={{filter: 'hue-rotate(200deg)'}}/>
+          <img src={assets.plus_icon} alt='expand icon' style={{ filter: 'hue-rotate(200deg)' }} />
           {extended ? <p>New Project</p> : null}
         </div>
-        {extended ? 
-        <div className="recent">
-          <p className="recent-title">Projects</p>
-          {sortedProjects.map(project => (
-            <div 
-              key={project.id} 
-              className={`recent-entry project-entry ${activeProjectId === project.id ? 'active-project' : ''}`}
-              onClick={() => switchToProject(project.id)}
-            >
-              <img src={assets.message_icon} alt='message icon' style={{ filter: 'hue-rotate(100deg)' }}/>
-              <div className="project-content">
-                {editingProjectId === project.id ? (
-                  <input
-                    ref={editInputRef}
-                    type="text"
-                    value={tempProjectName}
-                    onChange={(e) => setTempProjectName(e.target.value)}
-                    onKeyDown={(e) => handleKeyPress(e, project.id)}
-                    onBlur={() => handleInputBlur(project.id)}
-                    className="project-name-input"
-                    maxLength={100}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                ): (
-                  <>
-                    <p
-                      onDoubleClick={() => startEditingProject(project.id, project.name)}
-                      className="project-name-editable"
-                      title="Double click to edit the project name"
-                    >
-                      {project.name}
-                    </p>
-                    <span className="project-last-modified">
-                      {formatProjectDate(project.lastModified)}
-                    </span>
-                  </>
-                )}
-              </div>
-              <div className="project-options-wrapper">
-                <button 
-                  className="project-options-btn"
-                  onClick={(e) => handleProjectOptionsClick(e, project.id)}
-                  title="Project options"
-                >
-                  ⋮
-                </button>
-                {showProjectOptions === project.id && (
-                  <div 
-                    ref={projectOptionsRef}
-                    className="project-options-menu"
+        {extended ?
+          <div className="recent">
+            <p className="recent-title">Projects</p>
+            {sortedProjects.map(project => (
+              <div
+                key={project.id}
+                className={`recent-entry project-entry ${activeProjectId === project.id ? 'active-project' : ''}`}
+                onClick={() => switchToProject(project.id)}
+              >
+                <img src={assets.message_icon} alt='message icon' style={{ filter: 'hue-rotate(100deg)' }} />
+                <div className="project-content">
+                  {editingProjectId === project.id ? (
+                    <input
+                      ref={editInputRef}
+                      type="text"
+                      value={tempProjectName}
+                      onChange={(e) => setTempProjectName(e.target.value)}
+                      onKeyDown={(e) => handleKeyPress(e, project.id)}
+                      onBlur={() => handleInputBlur(project.id)}
+                      className="project-name-input"
+                      maxLength={100}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <>
+                      <p
+                        onDoubleClick={() => startEditingProject(project.id, project.name)}
+                        className="project-name-editable"
+                        title="Double click to edit the project name"
+                      >
+                        {project.name}
+                      </p>
+                      <span className="project-last-modified">
+                        {formatProjectDate(project.lastModified)}
+                      </span>
+                    </>
+                  )}
+                </div>
+                <div className="project-options-wrapper">
+                  <button
+                    className="project-options-btn"
+                    onClick={(e) => handleProjectOptionsClick(e, project.id)}
+                    title="Project options"
                   >
-                    <div 
-                      className="project-option"
-                      onClick={() => startEditingProject(project.id, project.name)}
+                    ⋮
+                  </button>
+                  {showProjectOptions === project.id && (
+                    <div
+                      ref={projectOptionsRef}
+                      className="project-options-menu"
                     >
-                      <span>Rename</span>
+                      <div
+                        className="project-option"
+                        onClick={() => startEditingProject(project.id, project.name)}
+                      >
+                        <span>Rename</span>
+                      </div>
+                      <div
+                        className="project-option"
+                        onClick={() => duplicateProject(project.id)}
+                      >
+                        <span>Duplicate</span>
+                      </div>
+                      <div className="project-option-separator"></div>
+                      <div
+                        className="project-option delete-option"
+                        onClick={() => deleteProject(project.id)}
+                      >
+                        <span>Delete</span>
+                      </div>
                     </div>
-                    <div 
-                      className="project-option"
-                      onClick={() => duplicateProject(project.id)}
-                    >
-                      <span>Duplicate</span>
-                    </div>
-                    <div className="project-option-separator"></div>
-                    <div 
-                      className="project-option delete-option"
-                      onClick={() => deleteProject(project.id)}
-                    >
-                      <span>Delete</span>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-        : null}
+            ))}
+          </div>
+          : null}
       </div>
       <div className="bottom">
         <div className="bottom-item recent-entry">
-          <img src={assets.question_icon} alt='question icon'/>
+          <img src={assets.question_icon} alt='question icon' />
           {extended ? <p>Help</p> : null}
         </div>
+        <div className="bottom-item recent-entry">
+          <img src={assets.history_icon} alt='history icon' />
+          {extended ? <p>Activity</p> : null}
+        </div>
         <div className="bottom-item recent-entry settings-item" style={{ position: 'relative' }}>
-          <img 
-            src={assets.setting_icon} 
+          <img
+            src={assets.setting_icon}
             alt='settings icon'
             onClick={handleSettingsClick}
           />
-          {extended ? <p onClick={handleSettingsClick}>Settings</p> : null }
+          {extended ? <p onClick={handleSettingsClick}>Settings</p> : null}
 
           {showSettingsMenu && (
-            <div 
+            <div
               ref={settingsMenuRef}
               className="settings-dropdown"
             >
               {settingsMenuItems.map((item, index) => {
                 if (item.type === 'separator') {
                   return (
-                    <div 
-                      key={index} 
+                    <div
+                      key={index}
                       className="settings-menu-separator"
                     />
                   );
@@ -453,7 +472,7 @@ const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate }) => {
                 return (
                   <div
                     key={index}
-                    className={`settings-menu-item ${item.disabled ? 'disabled' : ''} ${item.isJiraItem ? 'jira-item' : ''}`}
+                    className={`settings-menu-item ${item.disabled ? 'disabled' : ''} ${item.isJiraItem ? 'jira-item' : ''} ${item.isLogoutItem ? 'logout-item' : ''}`}
                     onClick={() => {
                       if (!item.disabled) {
                         item.action();
@@ -514,7 +533,7 @@ const Sidebar = ({ onProjectChange, currentProjectId, onProjectUpdate }) => {
             </div>
           )}
         </div>
-      </div> 
+      </div>
     </div>
   )
 }
