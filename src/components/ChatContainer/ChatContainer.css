@@ -93,6 +93,21 @@
   background: var(--accent-primary);
   color: white;
 }
+.chat-greeting {
+    margin: 20px 0px;
+    font-size: 56px;
+    color: var(--accent-primary);
+    font-weight: 500;
+    padding: 10px;
+    text-align: start;
+}
+
+.chat-greeting span {
+    background: -webkit-linear-gradient(16deg, var(--gradient-from), var(--gradient-to));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
 
 /* Markdown styling within chat bubbles */
 .chat-bubble.bot .markdown-renderer {

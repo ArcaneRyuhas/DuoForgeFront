@@ -103,22 +103,6 @@
   overflow:hidden;
 }
 
-.main .greet {
-  margin: 20px 0px;
-  font-size: 56px;
-  color: var(--accent-primary);
-  font-weight: 500;
-  padding: 10px;
-  flex-shrink:0;
-}
-
-.main .greet span {
-  background: -webkit-linear-gradient(16deg, var(--gradient-from), var(--gradient-to));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
 .main .cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

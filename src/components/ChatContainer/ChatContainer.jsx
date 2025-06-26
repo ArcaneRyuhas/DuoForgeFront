@@ -14,7 +14,9 @@ const ChatContainer = ({
     artifactStage,
     generationStage, 
     isWaitingResponse, 
-    currentInput = ''
+    currentInput = '', 
+    greetingText,
+    projectName
 }) => {
 
     const [fullscreenImage, setFullScreenImage] = useState(null);
@@ -282,6 +284,15 @@ const ChatContainer = ({
     return (
         <div className="chat-container">
             <div className="chat-messages-wrapper">
+                {(
+                    <div className="chat-greeting">
+                        <div>
+                            <p><span class= "greeting-hello">Hello!</span></p>
+                            <p><span class= "greeting-text">{greetingText}</span></p>
+                            <p><span> Project: {projectName}</span></p>
+                        </div>
+                    </div>
+                )}
                 {messages.map((m, i) => {
                     const useMarkdown = shouldUseMarkdownForMessage(m);
                     const buttonsConfig = getButtonsToShow(m, i);
