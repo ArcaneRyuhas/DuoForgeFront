@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import './ChatContainer.css';
 import MarkdownRenderer from '../MarkDownRenderer/markdownRenderer1';
 import { shouldRenderAsMarkdown } from '../RenderUtils/contentAnalyzers';
@@ -17,12 +17,21 @@ const ChatContainer = ({
     currentInput = ''
 }) => {
 
+    const [fullscreenImage, setFullScreenImage] = useState(null);
+
     const [persistedDiagrams, setPersistedDiagrams] = useState(new Map());
 
     const lastBotMessageIndex = messages.map((m,i) => ({...m, originalIndex:i}))
         .reverse()
         .find(m => m.sender === 'bot')?.originalIndex;
 
+    useEffect(() =>{
+        window.chatContainerImageHandler= handleImageClick; 
+        return () =>{
+            window.chatContainerImageHandler= null;
+        };
+    }, []);
+    
     const handleDiagramsRendered = useCallback((imageMap) => {
         setPersistedDiagrams(prev => {
             const newMap = new Map(prev);
@@ -32,6 +41,14 @@ const ChatContainer = ({
             return newMap;
         });
     }, []);
+
+    const handleImageClick = (imageSrc)=> {
+        setFullScreenImage(imageSrc);
+    }
+
+    const closeFullScreen = () =>{
+        setFullScreenImage(null);
+    }
 
     const formatFileSize = (bytes) => {
         if (bytes === 0) return '0 Bytes';
@@ -308,6 +325,53 @@ const ChatContainer = ({
                     );
                 })}
             </div>
+            {fullscreenImage && (
+            <div 
+                className="fullscreen-overlay" 
+                onClick={closeFullScreen}
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100vw',
+                    height: '100vh',
+                    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 9999,
+                    cursor: 'pointer'
+                }}
+            >
+                <img 
+                    src={fullscreenImage} 
+                    alt="Full size diagram" 
+                    style={{
+                        maxWidth: '95%',
+                        maxHeight: '95%',
+                        objectFit: 'contain'
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                />
+                <button
+                    onClick={closeFullScreen}
+                    style={{
+                        position: 'absolute',
+                        top: '20px',
+                        right: '20px',
+                        background: 'rgba(255, 255, 255, 0.8)',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '40px',
+                        height: '40px',
+                        fontSize: '20px',
+                        cursor: 'pointer'
+                    }}
+                >
+                    ×
+                </button>
+            </div>
+        )}
         </div>
     );
 };

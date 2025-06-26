@@ -17,21 +17,34 @@ const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) =>
 
     useEffect(() => {
         mermaid.initialize({
-            startOnLoad: false,
-            theme: 'default',
-            securityLevel: 'loose',
-            fontFamily: 'Arial, sans-serif', 
-            flowchart: {
-                useMaxWidth: true,
-                htmlLabels: true
-            }
-        });
+        startOnLoad: false,
+        theme: 'default',
+        securityLevel: 'loose',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        flowchart: {
+            useMaxWidth: false,
+            htmlLabels: true,
+            curve: 'basis',
+        },
+        sequence: {
+            useMaxWidth: false,
+            wrap: true
+        },
+        gantt: {
+            useMaxWidth: false
+        }
+    });
     }, []);
 
     useEffect(() => {
         if (persistedDiagrams && persistedDiagrams.size > 0) {
             setDiagramImages(new Map(persistedDiagrams));
         }
+        window.handleMermaidImageClick= (imageSrc) =>{
+            if(window.chatContainerImageHandler) {
+                window.chatContainerImageHandler(imageSrc);
+            }
+        };
     }, [persistedDiagrams]);
 
     if (!content) return null;
@@ -50,7 +63,8 @@ const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) =>
 
                     if (diagramImages.has(diagram.content)) {
                         console.log('Using cached image for:', diagram.id);
-                        element.innerHTML = `<img src="${diagramImages.get(diagram.content)}" alt="Mermaid Diagram" style="max-width: 100%; height: auto;" />`;
+                        const imageDataUrl = diagramImages.get(diagram.content);
+                        element.innerHTML = `<div style="overflow-x: auto; padding: 8px;"><img src="${imageDataUrl}" alt="Mermaid Diagram" style="max-width: 100%; height: auto; display: block; margin: 0 auto; cursor: pointer;" onclick="window.handleMermaidImageClick('${imageDataUrl}')" /></div>`;
                         continue;
                     }
 
@@ -66,16 +80,28 @@ const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) =>
                     console.log('Rendering new diagram:', diagram.id);
                     const svgId = `${diagram.id}-svg`;
                     const { svg } = await mermaid.render(svgId, cleanContent);
-                    
                     element.innerHTML = svg;
                     const svgElement = element.querySelector('svg');
-                    
+                    if (svgElement) {
+                    svgElement.style.display='block';
+                    svgElement.style.margin='0 auto';}
+
+                    const textElements = svgElement.querySelectorAll('text'); 
+                    textElements.forEach(text => {
+                        text.style.fontFamily= 'system-ui, -apple-system, sans-serif'; 
+                        text.style.fontSize= text.style.fontSize || '14px';}
+                    );
+
+                    const pathElements= svgElement.querySelectorAll('path, line');
+                        pathElements.forEach(path =>{
+                            path.style.strokeWidth = path.style.strokeWidth ||'2px';
+                        });
                     if (svgElement) {
                         try {
-                            const imageDataUrl = await svgToImageDataUrl(svgElement);
+                            const imageDataUrl = await svgToImageDataUrl(svgElement, { scale: 2, quality: 0.95 });
                             newImages.set(diagram.content, imageDataUrl);
                             console.log('Converted to image successfully:', diagram.id);
-                            element.innerHTML = `<img src="${imageDataUrl}" alt="Mermaid Diagram" style="max-width: 100%; height: auto;" />`;
+                            element.innerHTML = `<div style="overflow-x: auto; padding: 8px;"><img src="${imageDataUrl}" alt="Mermaid Diagram" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" /></div>`;
                         } catch (imgError) {
                             console.warn('Failed to convert SVG to image:', imgError);
                         }
@@ -151,10 +177,11 @@ const MarkdownRenderer = ({ content, onDiagramsRendered, persistedDiagrams }) =>
             className="markdown-renderer"
             dangerouslySetInnerHTML={{ __html: processedContentRef.current }}
             style={{
-                fontFamily: 'Arial, sans-serif',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
                 lineHeight: '1.6',
                 maxWidth: '100%',
-                overflow: 'auto'
+                overflow: 'visible', 
+                padding: '8px 0'
             }}
         />
     );
