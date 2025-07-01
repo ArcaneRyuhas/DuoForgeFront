@@ -142,6 +142,12 @@ export const validateAndCleanDiagram = (content) => {
         throw new Error('Empty diagram content');
     }
 
+    const firstLine = lines[0].toLowerCase().trim();
+    const validStarters = ['graph', 'flowchart', 'sequencediagram', 'classdiagram', 'statediagram', 'erdiagram', 'gantt', 'pie', 'gitgraph', 'mindmap', 'timeline', 'journey', 'quadrantchart', 'requirementdiagram', 'c4context'];
+    if (!validStarters.some(starter =>firstLine.startsWith(starter))){
+        throw new Error(`Invalid diagram type. Must start with one of: ${validStarters.join(', ')}`);
+    }
+
     const diagramType = lines[0].toLowerCase();
     
     // Basic validation for sequence diagrams
@@ -225,21 +231,30 @@ export const convertMarkdownToHtml = (text) => {
 };
 
 // SVG to Image Data URL Conversion
-export const svgToImageDataUrl = (svgElement) => {
+
+export const svgToImageDataUrl = (svgElement, options = {}) => {
     return new Promise((resolve, reject) => {
         try {
+            const { scale = 3, quality= 1 } = options; 
             const svgData = new XMLSerializer().serializeToString(svgElement);
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = new Image();
 
             img.onload = () => {
-                canvas.width = img.width;
-                canvas.height = img.height;
+                const rect = svgElement.getBoundingClientRect();
+                const actualWidth = img.naturalWidth||img.width || rect.width || 800;
+                const actualHeight = img.naturalHeight || img.height || rect.height || 600; 
+                
+                canvas.width = actualWidth * scale;
+                canvas.height = actualHeight * scale;
+                ctx.scale(scale,scale);
                 ctx.fillStyle = 'white';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.imageSmoothingEnabled=true;
+                ctx.imageSmoothingQuality= 'high';
                 ctx.drawImage(img, 0, 0);
-                resolve(canvas.toDataURL('image/png'));
+                resolve(canvas.toDataURL('image/png', quality));
             };
 
             img.onerror = reject;

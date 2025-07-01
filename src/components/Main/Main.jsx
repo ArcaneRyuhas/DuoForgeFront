@@ -202,12 +202,6 @@ const Main = ({ user, currentProject, onProjectUpdate }) => {
         <div className="main">
             <Nav />
             <div className="main-container" ref={mainContainerRef}>
-                <div className="greet">
-                    <p><span>Hello!</span></p>
-                    <p><span>{greetingText}</span></p>
-                    <p><span>Project: {currentProject.name}</span></p>
-                </div>
-
                 <ChatContainer
                     messages={messages}
                     onModify={handleModify}
@@ -219,6 +213,8 @@ const Main = ({ user, currentProject, onProjectUpdate }) => {
                     artifactStage={artifactStage}
                     generationStage={generationStage}
                     isWaitingResponse={isWaitingResponse}
+                    greetingText= {greetingText}
+                    projectName= {currentProject.name}
                 />
             </div>
             <div className="main-bottom">

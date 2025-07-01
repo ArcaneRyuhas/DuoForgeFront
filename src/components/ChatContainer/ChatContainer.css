@@ -30,16 +30,6 @@
   height: 100%; 
 }
 
-.main-bottom{
-    flex-shrink: 0;
-    position: relative;
-    width:100%;
-    padding: 5px 20px;
-    margin:0;
-    background-color: var(--bg-primary);
-    border-top: 1px solid var(--border-color);
-}
-
 .chat-bubble {
   max-width: 70%;
   margin-bottom: 0.5rem;
@@ -102,6 +92,21 @@
 .chat-actions button.active {
   background: var(--accent-primary);
   color: white;
+}
+.chat-greeting {
+    margin: 20px 0px;
+    font-size: 56px;
+    color: var(--accent-primary);
+    font-weight: 500;
+    padding: 10px;
+    text-align: start;
+}
+
+.chat-greeting span {
+    background: -webkit-linear-gradient(16deg, var(--gradient-from), var(--gradient-to));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 /* Markdown styling within chat bubbles */
@@ -188,7 +193,7 @@
   text-align: center;
   overflow-x: auto;
 }
-
+ 
 .chat-bubble.bot .markdown-table {
   border-collapse: collapse;
   width: 100%;
@@ -262,7 +267,7 @@
   border: 1px solid var(--border-color);
   border-radius: 8px;
   text-align: center;
-  overflow-x: auto;
+  overflow-x: visible;
 }
 
 .mermaid-error {
@@ -315,19 +320,11 @@
     width: 100%;
   }
   
-  .main .greet {
-    font-size: 36px;
-  }
-  
-  .main .cards {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* Project view - hide landing page elements when project is active */
 .main.project-active .greet,
-.main.project-active .cards,
-.main.project-active .main-bottom {
+.main.project-active .cards {
   display: none;
 }
 

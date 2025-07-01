@@ -8,7 +8,7 @@ import { apiPost } from './client';
  */
 export async function modifyJiraStories(userId, modificationJiraPrompt) {
     return apiPost('/documentation/modify', {
-        user_id: userId,
+        user_id: "userId",
         modification_prompt: modificationJiraPrompt,
     });
 }
@@ -21,7 +21,7 @@ export async function modifyJiraStories(userId, modificationJiraPrompt) {
  */
 export async function modifyMermaidDiagrams(userId, modificationDiagramPrompt) {
     return apiPost('/diagram/modify', {
-        user_id: userId,
+        user_id: "userId",
         modification_prompt: modificationDiagramPrompt,
     });
 }
@@ -34,7 +34,7 @@ export async function modifyMermaidDiagrams(userId, modificationDiagramPrompt) {
  */
 export async function modifyCode(userId, modificationCodePrompt) {
     return apiPost('/code/modify', {
-        user_id: userId,
+        user_id: "userId",
         modification_prompt: modificationCodePrompt,
     });
 }

@@ -42,7 +42,8 @@
   transition: background-color 0.3s ease, color 0.3s ease;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .main.project-active{
@@ -100,21 +101,6 @@
   display: flex;
   height: 100vh;
   overflow:hidden;
-}
-
-.main .greet {
-  margin: 20px 0px;
-  font-size: 56px;
-  color: var(--accent-primary);
-  font-weight: 500;
-  padding: 10px;
-}
-
-.main .greet span {
-  background: -webkit-linear-gradient(16deg, var(--gradient-from), var(--gradient-to));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .main .cards {
