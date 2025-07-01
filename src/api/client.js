@@ -10,11 +10,12 @@ export async function apiGet(endpoint) {
     return response.json();
 }
 
-export async function apiPost(endpoint, data) {
+export async function apiPost(endpoint, data, options = {}) {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            ...options.headers
         },
         body: JSON.stringify(data),
     });

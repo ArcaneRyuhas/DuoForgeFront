@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "react-oidc-context";
 import {
   BrowserRouter as Router,
   Routes,
@@ -12,70 +11,126 @@ import JiraOAuthCallback from "./routers/jirarouter";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
 function App() {
-  // Safe OIDC auth hook usage with fallback
-  let auth;
-  try {
-    auth = useAuth();
-  } catch (error) {
-    console.warn('OIDC context not available:', error);
-    auth = null;
-  }
-  
-  // Fallback auth object if OIDC is not available
-  const safeAuth = auth || {
-    isLoading: false,
-    isAuthenticated: false,
-    user: null,
-    error: null,
-    signoutRedirect: () => {}
-  };
-
   const [localUser, setLocalUser] = useState(null);
   const [isLocalLoading, setIsLocalLoading] = useState(true);
+  const [authToken, setAuthToken] = useState(null);
 
-  // Check for existing local authentication on app startup
   useEffect(() => {
     const checkLocalAuthStatus = () => {
       try {
         const savedUser = localStorage.getItem('infycode_user');
+        const savedToken = localStorage.getItem('auth_token');
+        
+        console.log('🔍 Checking saved auth data:', {
+          hasUser: !!savedUser,
+          hasToken: !!savedToken
+        });
+        
         if (savedUser) {
           const parsedUser = JSON.parse(savedUser);
           setLocalUser(parsedUser);
+          
+          const token = savedToken || parsedUser.token || parsedUser.access_token;
+          if (token && typeof token === 'string') {
+            setAuthToken(token);
+            console.log('✅ Token loaded from storage', {
+              exists: !!token,
+              length: token?.length || 0,
+              preview: token ? token.substring(0, 20) + '...' : 'null'
+            });
+          } else {
+            console.warn('⚠️ Invalid token format found:', typeof token, token);
+          }
+        } else if (savedToken) {
+          console.warn('Found token without user data, clearing...');
+          localStorage.removeItem('auth_token');
         }
       } catch (error) {
         console.error('Error parsing saved user data:', error);
         localStorage.removeItem('infycode_user');
+        localStorage.removeItem('auth_token');
+        setLocalUser(null);
+        setAuthToken(null);
       } finally {
         setIsLocalLoading(false);
       }
     };
 
-    // Simulate a brief loading time for a more realistic experience
     const timer = setTimeout(checkLocalAuthStatus, 500);
     return () => clearTimeout(timer);
   }, []);
 
-  const handleAuthSuccess = (userData) => {
-    setLocalUser(userData);
-    // Save user data to localStorage for persistence
-    localStorage.setItem('infycode_user', JSON.stringify(userData));
+  const handleAuthSuccess = (userData) => {    
+    let token = null;
+    if (typeof userData.id_token === 'string') {
+      token = userData.id_token;
+    }
+
+    if (!token || typeof token !== 'string') {
+      console.error('❌ No valid token found in auth response:', userData);
+      return;
+    }
+
+    // Prepare clean user data
+    const cleanUserData = {
+      username: userData.username || userData.user?.username,
+      lastName: userData.lastName || userData.last_name || userData.user?.lastName,
+      token: token,
+      access_token: token,
+      ...userData
+    };
+
+    setLocalUser(cleanUserData);
+    setAuthToken(token);
+
+    localStorage.setItem('infycode_user', JSON.stringify(cleanUserData));
+    localStorage.setItem('auth_token', token);
   };
 
   const handleLogout = () => {
+    console.log('🚪 Logging out...');
+    
+    // Clear state
     setLocalUser(null);
+    setAuthToken(null);
+    
+    // Clear localStorage
     localStorage.removeItem('infycode_user');
-    // Also sign out from OIDC if authenticated
-    if (safeAuth.isAuthenticated) {
-      safeAuth.signoutRedirect();
+    localStorage.removeItem('auth_token');
+    
+    console.log('✅ Logout completed');
+  };
+
+  // Token validation logic
+  const isTokenValid = (token) => {
+    if (!token || typeof token !== 'string') return false;
+    
+    try {
+      // Basic JWT validation - check if it's expired
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Date.now() / 1000;
+      
+      // Check if token is expired (with 5 minute buffer)
+      return payload.exp && payload.exp > (currentTime + 300);
+    } catch (error) {
+      console.error('Error validating token:', error);
+      return false;
     }
   };
 
-  // Determine current user - prioritize OIDC auth over local auth
-  const currentUser = safeAuth.isAuthenticated ? safeAuth.user : localUser;
-  const isAuthenticated = safeAuth.isAuthenticated || !!localUser;
+  // Check token validity on app load and periodically
+  useEffect(() => {
+    if (authToken && !isTokenValid(authToken)) {
+      console.warn('⚠️ Token is expired or invalid, logging out...');
+      handleLogout();
+    }
+  }, [authToken]);
 
-  // Show loading state if either OIDC or local auth is loading
-  if (safeAuth.isLoading || isLocalLoading) {
+  const currentUser = localUser;
+  const isAuthenticated = !!localUser && !!authToken;
+
+  // Show loading state
+  if (isLocalLoading) {
     return (
       <div style={{ 
         display: 'flex', 
@@ -102,11 +157,6 @@ function App() {
     );
   }
 
-  // Show OIDC error if present
-  if (safeAuth.error) {
-    return <div>Authentication Error: {safeAuth.error.message}</div>;
-  }
-
   return (
     <ThemeProvider>
       <Router>
@@ -122,10 +172,24 @@ function App() {
             }
           />
           <Route
+            path="/login"
+            element={
+              isAuthenticated ? (
+                <Navigate to="/dashboard" />
+              ) : (
+                <Login onAuthSuccess={handleAuthSuccess} />
+              )
+            }
+          />
+          <Route
             path="/dashboard"
             element={
               isAuthenticated ? (
-                <Dashboard user={currentUser} onLogout={handleLogout} />
+                <Dashboard 
+                  user={currentUser} 
+                  token={authToken}
+                  onLogout={handleLogout} 
+                />
               ) : (
                 <Navigate to="/login" />
               )

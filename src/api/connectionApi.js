@@ -1,10 +1,8 @@
 import React from 'react';
 import { ArtifactStages, GenerationStages } from '../constants/artifactStages';
-import { generateJiraStories, generateMermaidDiagrams, generateCode } from '../api/generation';
 import { Conversation } from '../api/conversation';
-import { modifyJiraStories, modifyMermaidDiagrams, modifyCode } from '../api/modify';
-import { extractProgrammingLanguage } from '../components/RenderUtils/contentAnalyzers';
-import { downloadProject, downloadProjectBlob } from '../api/project';
+import { downloadProject } from '../api/project';
+import { generateCode} from '../api/generation';
 
 /**
  * Executes the appropriate API call based on current artifact and generation stage
@@ -16,31 +14,32 @@ import { downloadProject, downloadProjectBlob } from '../api/project';
  * @param {Function} onProjectGenerated - Callback when project is generated (optional)
  * @returns {Promise<string>} Response text from the API
  */
-export async function executeStageBasedAction(artifactStage, generationStage, userId, inputText, files=[], onProjectGenerated = null) {
+export async function executeStageBasedAction(artifactStage, generationStage, inputText, files=[], onProjectGenerated = null) {
     try {
         let response;
         
         console.log(`Current stage: ${artifactStage} - ${generationStage}`);
         console.log(`Files attached: ${files?.length || 0}`);
+        console.log(`Files: ${files}`);
+        console.log(`Input text: ${inputText}`);
         
         if (artifactStage === ArtifactStages.Conversation) {
-            response = await Conversation(userId, inputText);
+            response = await Conversation(inputText, files);
         } else if (artifactStage === ArtifactStages.Documentation) {
             if (generationStage === GenerationStages.Creating) {
-                response = await generateJiraStories(userId, inputText, files);
+                response = await Conversation(inputText, files);
             } else if (generationStage === GenerationStages.Modifying) {
-                response = await modifyJiraStories(userId, inputText);
+                response = await Conversation(inputText);
             }
         } else if (artifactStage === ArtifactStages.Diagram) {
             if (generationStage === GenerationStages.Creating) {
-                response = await generateMermaidDiagrams(userId, inputText);
+                response = await Conversation(inputText);
             } else if (generationStage === GenerationStages.Modifying) {
-                response = await modifyMermaidDiagrams(userId, inputText);
+                response = await Conversation(inputText);
             }
         } else if (artifactStage === ArtifactStages.Code) {
-            const programmingLanguage = extractProgrammingLanguage(inputText);
             if (generationStage === GenerationStages.Creating) {
-                response = await generateCode(userId, inputText);
+                response = await generateCode(inputText);
                 
                 // Handle project generation response
                 if (response && response.project_id) {
@@ -57,9 +56,7 @@ export async function executeStageBasedAction(artifactStage, generationStage, us
                     // Return formatted response immediately with download link
                     return formatProjectGenerationResponse(response, true);
                 }
-            } else if (generationStage === GenerationStages.Modifying) {
-                response = await modifyCode(userId, inputText);
-            }
+            } 
         } else {
             throw new Error(`Unsupported stage: ${artifactStage}`);
         }

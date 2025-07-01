@@ -77,13 +77,17 @@ const Login = ({ onAuthSuccess }) => {
         setIsLoading(true);
 
         try {
-            const user = await authenticateUser(formData.username, formData.password);
-
+            const response = await authenticateUser(formData.username, formData.password);
+            
+            // Just pass the response to parent - let App handle token extraction
             if (onAuthSuccess) {
-                onAuthSuccess(user);
+                onAuthSuccess(response);
             }
         } catch (error) {
-            setErrors({ submit: 'Authentication failed. Please try again.' });
+            console.error('Authentication failed:', error);
+            setErrors({ 
+                submit: error.message || 'Authentication failed. Please try again.' 
+            });
         } finally {
             setIsLoading(false);
         }

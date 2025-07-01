@@ -165,7 +165,6 @@ export function useMessageHandler(artifactStage, generationStage, user, getFileB
             const response = await executeStageBasedAction(
                 artifactStage, 
                 generationStage, 
-                userId, 
                 completeMessage, 
                 selectedFilesForAPI
             );
